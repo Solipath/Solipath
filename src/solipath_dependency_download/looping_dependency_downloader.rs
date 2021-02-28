@@ -86,7 +86,12 @@ mod tests {
         let dependency_instructions_list: Vec<DependencyInstructions> = vec![node_dependency_instructions.clone()];
 
         let mut platform_filter = MockPlatformFilterTrait::new();
-        verify_platform_filter(&mut platform_filter, vec![Platform::new("a good match", "x86")], true, 1);
+        verify_platform_filter(
+            &mut platform_filter,
+            vec![Platform::new("a good match", "x86")],
+            true,
+            1,
+        );
 
         let mut dependency_downloader = MockDependencyDownloaderTrait::new();
         verify_download_dependency_called(
