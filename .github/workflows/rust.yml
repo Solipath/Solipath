@@ -18,9 +18,20 @@ jobs:
       matrix:
         include:
           - os: macos-latest
+            name: macos_x86_64
+            target: x86_64-apple-darwin
           - os: ubuntu-latest
+            name: ubuntu_x86_64
+            target: x86_64-unknown-linux-gnu
           - os: windows-latest
+            name: windows_x86_64
+            target: x86_64-pc-windows-msvc
     steps:
+    - uses: actions/checkout@v2
+    - name: Install rust version
+      uses: actions-rs/toolchain@v1
+      with:
+        target: ${{matrix.toolchain}}
     - uses: actions/checkout@v2
     - name: Build
       run: cargo build --verbose
@@ -31,9 +42,9 @@ jobs:
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "latest-${{matrix.os}}"
+        automatic_release_tag: "latest-${{matrix.name}}"
         prerelease: false
-        title: "Latest Build ${{matrix.os}}"
+        title: "Latest Build ${{matrix.name}}"
         files: |
           target/release/solipath.exe
           target/release/solipath.so
