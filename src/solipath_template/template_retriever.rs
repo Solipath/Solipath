@@ -13,7 +13,7 @@ use crate::solipath_instructions::data::install_instructions::InstallInstruction
 use crate::solipath_instructions::data::template::Template;
 use crate::solipath_template::template_variable_replacer::TemplateVariableReplacerTrait;
 
-const BASE_DEPENDENCY_URL: &str = "https://raw.githubusercontent.com/Solipath/Solipath-Install-Instructions";
+const BASE_DEPENDENCY_URL: &str = "https://raw.githubusercontent.com/Solipath/Solipath-Install-Instructions/main";
 
 #[cfg_attr(test, automock)]
 #[async_trait]
@@ -115,7 +115,7 @@ mod test {
         mock_file_downloader
             .expect_download_file_then_parse_to_string()
             .withf(move |url, path| {
-                url == "https://raw.githubusercontent.com/Solipath/Solipath-Install-Instructions/java/templates/template1.json"
+                url == "https://raw.githubusercontent.com/Solipath/Solipath-Install-Instructions/main/java/templates/template1.json"
                 && path.clone() == PathBuf::from("/something/template1.json")
             })
             .times(1)
