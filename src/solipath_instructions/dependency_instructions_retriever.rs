@@ -1,3 +1,5 @@
+use async_trait::async_trait;
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use crate::solipath_instructions::data::dependency_instructions::DependencyInstructions;
@@ -6,7 +8,6 @@ use crate::{
     solipath_directory::solipath_directory_finder::SolipathDirectoryFinderTrait,
     solipath_download::file_to_string_downloader::FileToStringDownloaderTrait,
 };
-use async_trait::async_trait;
 
 #[cfg(test)]
 use mockall::{automock, predicate::*};
@@ -34,17 +35,25 @@ impl DependencyInstructionsRetriever {
             directory_finder,
         }
     }
+    fn get_path_to_save_file(&self, dependency: &Dependency) -> PathBuf {
+        let mut path_to_save_file = self.directory_finder.get_dependency_version_directory(&dependency);
+        path_to_save_file.push("install_instructions.json");
+        path_to_save_file
+    }
+
+    fn get_url(&self, dependency: &Dependency) -> String {
+        format!(
+            "{}/{}/{}/install_instructions.json",
+            BASE_DEPENDENCY_URL, dependency.name, dependency.version
+        )
+    }
 }
 
 #[async_trait]
 impl DependencyInstructionsRetrieverTrait for DependencyInstructionsRetriever {
     async fn retrieve_dependency_instructions(&self, dependency: Dependency) -> DependencyInstructions {
-        let mut path_to_save_file = self.directory_finder.get_dependency_version_directory(&dependency);
-        path_to_save_file.push("install_instructions.json");
-        let url = format!(
-            "{}/{}/{}/install_instructions.json",
-            BASE_DEPENDENCY_URL, dependency.name, dependency.version
-        );
+        let path_to_save_file = self.get_path_to_save_file(&dependency);
+        let url = self.get_url(&dependency);
         let dependency_json_string = self
             .file_downloader
             .download_file_then_parse_to_string(&url, &path_to_save_file)

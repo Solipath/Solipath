@@ -1,5 +1,6 @@
 use crate::solipath_instructions::data::download_instruction::DownloadInstruction;
 use crate::solipath_instructions::data::environment_variable::EnvironmentVariable;
+use crate::solipath_instructions::data::template::Template;
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -9,6 +10,9 @@ pub struct InstallInstructions {
 
     #[serde(default = "default_environment_variable")]
     environment_variables: Vec<EnvironmentVariable>,
+
+    #[serde(default = "default_templates")]
+    templates: Vec<Template>,
 }
 
 fn default_downloads() -> Vec<DownloadInstruction> {
@@ -19,6 +23,10 @@ fn default_environment_variable() -> Vec<EnvironmentVariable> {
     Vec::new()
 }
 
+fn default_templates() -> Vec<Template> {
+    Vec::new()
+}
+
 impl InstallInstructions {
     pub fn get_downloads(&self) -> Vec<DownloadInstruction> {
         self.downloads.clone()
@@ -26,5 +34,9 @@ impl InstallInstructions {
 
     pub fn get_environment_variables(&self) -> Vec<EnvironmentVariable> {
         self.environment_variables.clone()
+    }
+
+    pub fn get_templates(&self) -> Vec<Template> {
+        self.templates.clone()
     }
 }

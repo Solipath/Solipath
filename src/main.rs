@@ -10,6 +10,7 @@ mod solipath_environment_variable;
 mod solipath_execute;
 mod solipath_instructions;
 mod solipath_platform;
+mod solipath_template;
 
 #[tokio::main]
 async fn main() {

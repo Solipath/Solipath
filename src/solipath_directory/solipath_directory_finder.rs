@@ -12,6 +12,7 @@ pub trait SolipathDirectoryFinderTrait {
     fn get_base_solipath_directory(&self) -> PathBuf;
     fn get_dependency_version_directory(&self, dependency: &Dependency) -> PathBuf;
     fn get_dependency_downloads_directory(&self, dependency: &Dependency) -> PathBuf;
+    fn get_dependency_template_directory(&self, dependency: &Dependency) -> PathBuf;
 }
 
 pub struct SolipathDirectoryFinder {}
@@ -40,6 +41,13 @@ impl SolipathDirectoryFinderTrait for SolipathDirectoryFinder {
         let mut path = self.get_base_solipath_directory();
         path.push(dependency.name.to_string());
         path.push("downloads");
+        path
+    }
+
+    fn get_dependency_template_directory(&self, dependency: &Dependency) -> PathBuf {
+        let mut path = self.get_base_solipath_directory();
+        path.push(dependency.name.to_string());
+        path.push("templates");
         path
     }
 }
@@ -78,6 +86,17 @@ mod tests {
         assert_eq!(
             solipath_directory.to_str().unwrap().to_string(),
             format!("{}/solipath/node/downloads", home_dir)
+        );
+    }
+
+    #[test]
+    fn dependency_template_solipath_directory_ends_with_solipath_dependency_name() {
+        let dependency = Dependency::new("node", "14");
+        let solipath_directory = SolipathDirectoryFinder::new().get_dependency_template_directory(&dependency);
+        let home_dir = home_dir().unwrap().to_str().unwrap().to_string();
+        assert_eq!(
+            solipath_directory.to_str().unwrap().to_string(),
+            format!("{}/solipath/node/templates", home_dir)
         );
     }
 }

@@ -1,5 +1,5 @@
 use crate::solipath_dependency_metadata::dependency::Dependency;
-
+use crate::solipath_instructions::data::template::Template;
 use crate::solipath_instructions::data::{
     download_instruction::DownloadInstruction, environment_variable::EnvironmentVariable,
     install_instructions::InstallInstructions,
@@ -27,5 +27,8 @@ impl DependencyInstructions {
     }
     pub fn get_downloads(&self) -> Vec<DownloadInstruction> {
         self.install_instructions.get_downloads()
+    }
+    pub fn get_templates(&self) -> Vec<Template> {
+        self.install_instructions.get_templates()
     }
 }

@@ -40,9 +40,7 @@ impl FileDownloaderTrait for FileDownloader {
         create_dir_all(&parent_directory)
             .await
             .expect("failed to create parent directories");
-        let mut file = File::create(path_to_save_to.clone())
-            .await
-            .expect("could not create file");
+        let mut file = File::create(path_to_save_to).await.expect("could not create file");
         println!("downloading {}...", url);
         while let Some(chunk) = response.chunk().await.expect("file download failed!") {
             file.write_all(&chunk)

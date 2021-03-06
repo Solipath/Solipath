@@ -24,9 +24,9 @@ impl PlatformFilter {
 
     fn match_found_in_list(&self, platform_list: &[Platform]) -> bool {
         let current_platform = self.current_platform_retriever.get_current_platform();
-        platform_list.iter().fold(false, |accumulator, platform| {
-            accumulator || platform.is_superset_of(&current_platform)
-        })
+        platform_list
+            .iter()
+            .any(|platform| platform.is_superset_of(&current_platform))
     }
 }
 
