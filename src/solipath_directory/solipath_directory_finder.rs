@@ -91,8 +91,8 @@ mod tests {
         let solipath_directory = SolipathDirectoryFinder::new().get_dependency_template_directory(&dependency);
         let home_dir = home_dir().unwrap().to_str().unwrap().to_string();
         assert_eq!(
-            solipath_directory.to_str().unwrap().to_string(),
-            format!("{}/solipath/node/templates", home_dir)
+            solipath_directory,
+            PathBuf::from(format!("{}/solipath/node/templates", home_dir))
         );
     }
 }
