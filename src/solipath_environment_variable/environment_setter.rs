@@ -96,10 +96,8 @@ mod test {
         let environment_setter = EnvironmentSetter::new(Arc::new(directory_finder));
         environment_setter.set_variable(dependency, environment_variable);
         assert!(var("PATH").unwrap().starts_with(&original_path));
-        assert!(var("PATH").unwrap().ends_with(
-            PathBuf::from("solipath/home/downloads/some/path/location")
-                .to_str()
-                .unwrap()
-        ));
+        let mut expected_path = PathBuf::from("solipath/home/downloads");
+        expected_path.push("some/path/location");
+        assert!(var("PATH").unwrap().ends_with(expected_path.to_str().unwrap()));
     }
 }

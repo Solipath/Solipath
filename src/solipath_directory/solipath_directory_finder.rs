@@ -2,10 +2,9 @@ use std::path::PathBuf;
 
 use dirs_next::home_dir;
 
+use crate::solipath_dependency_metadata::dependency::Dependency;
 #[cfg(test)]
 use mockall::automock;
-
-use crate::solipath_dependency_metadata::dependency::Dependency;
 
 #[cfg_attr(test, automock)]
 pub trait SolipathDirectoryFinderTrait {
@@ -61,10 +60,7 @@ mod tests {
     fn base_solipath_directory_ends_with_solipath() {
         let solipath_directory = SolipathDirectoryFinder::new().get_base_solipath_directory();
         let home_dir = home_dir().unwrap().to_str().unwrap().to_string();
-        assert_eq!(
-            solipath_directory.to_str().unwrap().to_string(),
-            format!("{}/solipath", home_dir)
-        );
+        assert_eq!(solipath_directory, PathBuf::from(format!("{}/solipath", home_dir)));
     }
 
     #[test]
@@ -73,8 +69,8 @@ mod tests {
         let solipath_directory = SolipathDirectoryFinder::new().get_dependency_version_directory(&dependency);
         let home_dir = home_dir().unwrap().to_str().unwrap().to_string();
         assert_eq!(
-            solipath_directory.to_str().unwrap().to_string(),
-            format!("{}/solipath/java/11", home_dir)
+            solipath_directory,
+            PathBuf::from(format!("{}/solipath/java/11", home_dir))
         );
     }
 
@@ -84,8 +80,8 @@ mod tests {
         let solipath_directory = SolipathDirectoryFinder::new().get_dependency_downloads_directory(&dependency);
         let home_dir = home_dir().unwrap().to_str().unwrap().to_string();
         assert_eq!(
-            solipath_directory.to_str().unwrap().to_string(),
-            format!("{}/solipath/node/downloads", home_dir)
+            solipath_directory,
+            PathBuf::from(format!("{}/solipath/node/downloads", home_dir))
         );
     }
 
