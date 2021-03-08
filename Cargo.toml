@@ -16,7 +16,9 @@ tempfile = "3.2.0"
 async-trait = "0.1.42"
 futures = "0.3.8"
 tar = "0.4.32"
-zip = "0.5.9"
+#zip = "0.5.9"
+#using this until main zip has option for symlinks
+zip = {git = "https://github.com/markmmm/zip.git"}
 flate2 = "1.0.14"
 
 [dev-dependencies]
