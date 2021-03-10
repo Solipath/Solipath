@@ -1448,7 +1448,7 @@ dependencies = [
 [[package]]
 name = "zip"
 version = "0.5.9"
-source = "git+https://github.com/markmmm/zip.git#b0f4e989a2d32ccb0d1b43e3bf9dc91b5020a3f7"
+source = "git+https://github.com/bfrazho/zip.git#b0f4e989a2d32ccb0d1b43e3bf9dc91b5020a3f7"
 dependencies = [
  "byteorder",
  "bzip2",

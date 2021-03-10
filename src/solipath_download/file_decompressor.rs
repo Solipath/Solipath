@@ -27,6 +27,7 @@ impl FileDecompressorTrait for FileDecompressor {
     fn decompress_file_to_directory(&self, source_file: &Path, target_directory: &Path) {
         let file_name = source_file.file_name().unwrap().to_str().unwrap();
         create_dir_all(&target_directory).expect("failed to create parent directories");
+        println!("starting to move {} to {:?}", file_name, target_directory);
         if file_name.ends_with(".zip") {
             unzip_to_destination(source_file, target_directory);
         } else if file_name.ends_with(".tar.gz") {
@@ -34,6 +35,7 @@ impl FileDecompressorTrait for FileDecompressor {
         } else {
             just_copy_file_to_destination(source_file, target_directory, file_name);
         }
+        println!("finished moving {} to {:?}", file_name, target_directory);
     }
 }
 
@@ -41,9 +43,9 @@ fn unzip_to_destination(source_file: &Path, target_directory: &Path) {
     let zip_file = File::open(source_file).expect("failed to open file");
     let buffered_reader = BufReader::new(zip_file);
     ZipArchive::new(buffered_reader)
-        .expect("failed to open zip file")
-        .extract(target_directory)
-        .expect("failed to extract file");
+    .expect("failed to open zip file")
+    .extract(target_directory)
+    .expect("failed to extract file");
 }
 
 fn extract_tar_gz_to_destination(source_file: &Path, target_directory: &Path) {
