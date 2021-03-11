@@ -50,8 +50,9 @@ impl EnvironmentSetterTrait for EnvironmentSetter {
 
 fn append_to_path(absolute_path: PathBuf) {
     let mut split_paths = split_paths(&var("PATH").expect("failed to get PATH variable")).collect::<Vec<_>>();
-    split_paths.push(absolute_path);
-    let combined_path = join_paths(split_paths).expect("failed to combine paths");
+    let mut path = vec!(absolute_path);
+    path.append(&mut split_paths);
+    let combined_path = join_paths(path).expect("failed to combine paths");
     set_var("PATH", combined_path);
 }
 
@@ -95,9 +96,9 @@ mod test {
             .return_const(PathBuf::from("solipath/home/downloads"));
         let environment_setter = EnvironmentSetter::new(Arc::new(directory_finder));
         environment_setter.set_variable(dependency, environment_variable);
-        assert!(var("PATH").unwrap().starts_with(&original_path));
         let mut expected_path = PathBuf::from("solipath/home/downloads");
         expected_path.push("some/path/location");
-        assert!(var("PATH").unwrap().ends_with(expected_path.to_str().unwrap()));
+        assert!(var("PATH").unwrap().starts_with(expected_path.to_str().unwrap()));
+        assert!(var("PATH").unwrap().ends_with(&original_path));
     }
 }
