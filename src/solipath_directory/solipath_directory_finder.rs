@@ -9,25 +9,6 @@ use mockall::automock;
 #[cfg_attr(test, automock)]
 pub trait SolipathDirectoryFinderTrait {
     fn get_base_solipath_directory(&self) -> PathBuf;
-    fn get_dependency_version_directory(&self, dependency: &Dependency) -> PathBuf;
-    fn get_dependency_downloads_directory(&self, dependency: &Dependency) -> PathBuf;
-    fn get_dependency_template_directory(&self, dependency: &Dependency) -> PathBuf;
-}
-
-pub struct SolipathDirectoryFinder {}
-
-impl SolipathDirectoryFinder {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
-
-impl SolipathDirectoryFinderTrait for SolipathDirectoryFinder {
-    fn get_base_solipath_directory(&self) -> PathBuf {
-        let mut solipath = home_dir().expect("failed to retrieve home dir");
-        solipath.push("solipath");
-        solipath
-    }
 
     fn get_dependency_version_directory(&self, dependency: &Dependency) -> PathBuf {
         let mut path = self.get_base_solipath_directory();
@@ -48,6 +29,22 @@ impl SolipathDirectoryFinderTrait for SolipathDirectoryFinder {
         path.push(dependency.name.to_string());
         path.push("templates");
         path
+    }
+}
+
+pub struct SolipathDirectoryFinder {}
+
+impl SolipathDirectoryFinder {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+impl SolipathDirectoryFinderTrait for SolipathDirectoryFinder {
+    fn get_base_solipath_directory(&self) -> PathBuf {
+        let mut solipath = home_dir().expect("failed to retrieve home dir");
+        solipath.push("solipath");
+        solipath
     }
 }
 

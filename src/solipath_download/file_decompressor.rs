@@ -43,9 +43,9 @@ fn unzip_to_destination(source_file: &Path, target_directory: &Path) {
     let zip_file = File::open(source_file).expect("failed to open file");
     let buffered_reader = BufReader::new(zip_file);
     ZipArchive::new(buffered_reader)
-    .expect("failed to open zip file")
-    .extract(target_directory)
-    .expect("failed to extract file");
+        .expect("failed to open zip file")
+        .extract(target_directory)
+        .expect("failed to extract file");
 }
 
 fn extract_tar_gz_to_destination(source_file: &Path, target_directory: &Path) {

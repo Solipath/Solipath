@@ -37,9 +37,13 @@ pub struct CommandWithPathExecutor {
 impl CommandWithPathExecutor {
     pub fn new() -> Self {
         let directory_finder = Arc::new(SolipathDirectoryFinder::new());
-        CommandWithPathExecutor::new_with_directory_finder(directory_finder)
+        let command_executor = Arc::new(CommandExecutor::new());
+        CommandWithPathExecutor::new_with_directory_finder(directory_finder, command_executor)
     }
-    pub fn new_with_directory_finder(directory_finder: Arc<dyn SolipathDirectoryFinderTrait + Sync + Send>) -> Self {
+    pub fn new_with_directory_finder(
+        directory_finder: Arc<dyn SolipathDirectoryFinderTrait + Sync + Send>,
+        command_executor: Arc<dyn CommandExecutorTrait + Sync + Send>,
+    ) -> Self {
         let file_downloader = Arc::new(FileDownloader::new());
         let file_decompressor = Arc::new(FileDecompressor::new());
         let conditional_file_downloader = Arc::new(ConditionalFileDownloader::new(file_downloader, file_decompressor));
@@ -74,7 +78,6 @@ impl CommandWithPathExecutor {
         ));
         let environment_setter = Arc::new(EnvironmentSetter::new(directory_finder));
         let looping_environment_setter = Arc::new(LoopingEnvironmentSetter::new(environment_setter, platform_filter));
-        let command_executor = Arc::new(CommandExecutor::new());
 
         Self {
             dependency_instructions_list_retriever: looping_dependency_instructions_retriever,

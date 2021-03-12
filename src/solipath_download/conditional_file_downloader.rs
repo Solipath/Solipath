@@ -105,7 +105,7 @@ mod tests {
         let mut path_to_save_to = temp_dir.path().to_path_buf();
         path_to_save_to.push("directory_that_should_not_exist");
         let copy_path_to_save_to = path_to_save_to.clone();
-        
+
         let mut file_downloader = MockFileDownloaderTrait::new();
         file_downloader
             .expect_download_file_to_directory()
@@ -116,7 +116,8 @@ mod tests {
         file_decompressor
             .expect_decompress_file_to_directory()
             .withf(move |source_file_path, target_directory| {
-                source_file_path == PathBuf::from("/output_path/download.zip") && target_directory == copy_path_to_save_to
+                source_file_path == PathBuf::from("/output_path/download.zip")
+                    && target_directory == copy_path_to_save_to
             })
             .times(1)
             .return_const(());

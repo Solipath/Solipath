@@ -15,7 +15,7 @@ impl CommandExecutor {
         Self {}
     }
 
-    fn setup_command(&self, commands: &[String]) -> Command {
+    pub fn setup_command(&self, commands: &[String]) -> Command {
         if std::env::consts::OS == "windows" {
             let mut command = Command::new("cmd");
             command.arg("/C").args(commands);

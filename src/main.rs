@@ -1,16 +1,5 @@
-use solipath_dependency_metadata::dependency::Dependency;
-use solipath_execute::command_with_path_executor::CommandWithPathExecutor;
-
-mod solipath_commandline;
-mod solipath_dependency_download;
-mod solipath_dependency_metadata;
-mod solipath_directory;
-mod solipath_download;
-mod solipath_environment_variable;
-mod solipath_execute;
-mod solipath_instructions;
-mod solipath_platform;
-mod solipath_template;
+use solipath_lib::solipath_dependency_metadata::dependency::Dependency;
+use solipath_lib::solipath_execute::command_with_path_executor::CommandWithPathExecutor;
 
 #[tokio::main]
 async fn main() {

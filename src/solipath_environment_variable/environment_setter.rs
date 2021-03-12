@@ -50,7 +50,7 @@ impl EnvironmentSetterTrait for EnvironmentSetter {
 
 fn append_to_path(absolute_path: PathBuf) {
     let mut split_paths = split_paths(&var("PATH").expect("failed to get PATH variable")).collect::<Vec<_>>();
-    let mut path = vec!(absolute_path);
+    let mut path = vec![absolute_path];
     path.append(&mut split_paths);
     let combined_path = join_paths(path).expect("failed to combine paths");
     set_var("PATH", combined_path);
