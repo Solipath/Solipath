@@ -28,7 +28,7 @@ async fn install_node_integration_test() {
 
     let output = command_executor.get_output();
     if std::env::consts::OS == "windows" {
-        assert_eq!(output, "\"v15.11.0\"\r\n");
+        assert_eq!(output, "v15.11.0\r\n");
     } else {
         assert_eq!(output, "v15.11.0\n");
     }
@@ -49,11 +49,7 @@ async fn install_java_integration_test() {
         .await;
 
     let output = command_executor.get_output();
-    if std::env::consts::OS == "windows" {
-        assert!(output.starts_with("\"openjdk 15.0.2 2021-01-19\"\r\n"));
-    } else {
-        assert!(output.starts_with("openjdk 15.0.2 2021-01-19\n"));
-    }
+    assert!(output.starts_with("openjdk 15.0.2 2021-01-19"));
 }
 
 struct IntegrationTestSolipathDirectoryFinder {
