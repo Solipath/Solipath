@@ -14,7 +14,7 @@ pub fn get_file_name(url: &str, header: &HeaderMap) -> String {
     }
 }
 
-pub fn get_file_name_from_content_disposition(header: &HeaderValue, url: &str) -> String {
+fn get_file_name_from_content_disposition(header: &HeaderValue, url: &str) -> String {
     let content_string = header.to_str().expect("failed to convert to string");
     let content_disposition = ContentDisposition::parse_header::<Raw>(&content_string.into()).unwrap();
     let filename_param: Option<&DispositionParam> = content_disposition
@@ -29,14 +29,14 @@ pub fn get_file_name_from_content_disposition(header: &HeaderValue, url: &str) -
     }
 }
 
-pub fn is_filename(param: &DispositionParam) -> bool {
+fn is_filename(param: &DispositionParam) -> bool {
     match param {
         DispositionParam::Filename(_, _, _) => true,
         _ => false,
     }
 }
 
-pub fn get_string_after_last_forward_slash(url: &str) -> String {
+fn get_string_after_last_forward_slash(url: &str) -> String {
     let index_of_forward_slash: usize = url.rfind('/').expect("could not find a forward slash in url");
     let (_, string_after_last_slash) = url.split_at(index_of_forward_slash + 1);
     string_after_last_slash.to_string()
