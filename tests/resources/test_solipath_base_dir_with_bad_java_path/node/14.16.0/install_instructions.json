@@ -1,0 +1,24 @@
+{
+	"downloads": [
+		{
+			"url": "https://nodejs.org/dist/v14.16.0/node-v14.16.0-linux-x64.tar.gz",
+			"destination_directory": "14.16.0",
+			"platform_filters": [{"os": "linux", "arch": "x86_64"}]
+		},
+		{
+			"url": "https://nodejs.org/dist/v14.16.0/node-v14.16.0-win-x64.zip",
+			"destination_directory": "14.16.0",
+			"platform_filters": [{"os": "windows", "arch": "x86_64"}]
+    	},
+		{
+			"url": "https://nodejs.org/dist/v14.16.0/node-v14.16.0-darwin-x64.tar.gz",
+			"destination_directory": "14.16.0",
+			"platform_filters": [{"os": "macos", "arch": "x86_64"}]
+		}
+	],
+	"environment_variables": [
+		{"name": "PATH", "relative_path": "14.16.0/node-v14.16.0-linux-x64/bin", "platform_filters": [{"os": "linux", "arch": "x86_64"}]},
+		{"name": "PATH", "relative_path": "14.16.0/node-v14.16.0-win-x64", "platform_filters": [{"os": "windows", "arch": "x86_64"}]},
+		{"name": "PATH", "relative_path": "14.16.0/node-v14.16.0-darwin-x64/bin", "platform_filters": [{"os": "macos", "arch": "x86_64"}]}
+	]
+}

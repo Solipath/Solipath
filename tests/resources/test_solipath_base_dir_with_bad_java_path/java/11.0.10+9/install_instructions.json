@@ -1,0 +1,25 @@
+{
+	"downloads": [
+		{
+			"url": "https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.10%2B9/OpenJDK11U-jdk_x64_linux_hotspot_11.0.10_9.tar.gz.notreal",
+			"destination_directory": "11.0.10+9",
+			"platform_filters": [{"os": "linux", "arch": "x86_64"}]
+		},
+		{
+			"url": "https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.10%2B9/OpenJDK11U-jdk_x64_windows_hotspot_11.0.10_9.zip",
+			"destination_directory": "11.0.10+9",
+			"platform_filters": [{"os": "windows", "arch": "x86_64"}]
+        },
+		{
+			"url": "https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.10%2B9/OpenJDK11U-jdk_x64_mac_hotspot_11.0.10_9.tar.gz",
+			"destination_directory": "11.0.10+9",
+			"platform_filters": [{"os": "macos", "arch": "x86_64"}]
+        }
+	],
+	"environment_variables": [
+		{"name": "JAVA_HOME", "relative_path": "11.0.10+9/jdk-11.0.10+9", "platform_filters": [{"os": "linux"}, {"os": "windows"}]},
+		{"name": "PATH", "relative_path": "11.0.10+9/jdk-11.0.10+9/bin", "platform_filters": [{"os": "linux"}, {"os": "windows"}]},
+		{"name": "JAVA_HOME", "relative_path": "11.0.10+9/jdk-11.0.10+9/Contents/Home", "platform_filters": [{"os": "macos"}]},
+		{"name": "PATH", "relative_path": "11.0.10+9/jdk-11.0.10+9/Contents/Home/bin", "platform_filters": [{"os": "macos"}]}
+	]
+}
