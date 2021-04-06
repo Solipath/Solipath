@@ -46,5 +46,8 @@ jobs:
         title: "Latest Build ${{matrix.name}}"
         files: |
           target/release/solipath.exe
+          target/release/download_verifier.exe
           target/release/solipath.so
+          target/release/download_verifier.so
           target/release/solipath
+          target/release/download_verifier
