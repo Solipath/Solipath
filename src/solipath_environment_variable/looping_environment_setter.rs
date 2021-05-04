@@ -40,7 +40,7 @@ impl LoopingEnvironmentSetter {
                 self.environment_setter
                     .set_variable(dependency_instructions.get_dependency(), environment_variable)
             })
-    }
+    } 
 }
 
 impl LoopingEnvironmentSetterTrait for LoopingEnvironmentSetter {

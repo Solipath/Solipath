@@ -22,6 +22,7 @@ impl PlatformFilter {
         }
     }
 
+    
     fn match_found_in_list(&self, platform_list: &[Platform]) -> bool {
         let current_platform = self.current_platform_retriever.get_current_platform();
         platform_list

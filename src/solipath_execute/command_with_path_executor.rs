@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::solipath_commandline::command_executor::CommandExecutor;
+use crate::solipath_commandline::{command_executor::CommandExecutor, install_command_executor::InstallCommandExecutor, install_command_filter::InstallCommandFilter, looping_install_command_executor::{LoopingInstallCommandExecutor, LoopingInstallCommandExecutorTrait}};
 use crate::solipath_commandline::command_executor::CommandExecutorTrait;
 use crate::solipath_dependency_download::dependency_downloader::DependencyDownloader;
 use crate::solipath_dependency_download::looping_dependency_downloader::LoopingDependencyDownloader;
@@ -31,6 +31,7 @@ pub struct CommandWithPathExecutor {
     looping_template_retriever: Arc<dyn LoopingTemplateRetrieverTrait + Sync + Send>,
     looping_dependency_downloader: Arc<dyn LoopingDependencyDownloaderTrait + Sync + Send>,
     looping_environment_setter: Arc<dyn LoopingEnvironmentSetterTrait + Sync + Send>,
+    looping_install_command_executor: Arc<dyn LoopingInstallCommandExecutorTrait + Sync + Send>,
     command_executor: Arc<dyn CommandExecutorTrait + Sync + Send>,
 }
 
@@ -76,14 +77,17 @@ impl CommandWithPathExecutor {
             dependency_downloader,
             platform_filter.clone(),
         ));
-        let environment_setter = Arc::new(EnvironmentSetter::new(directory_finder));
-        let looping_environment_setter = Arc::new(LoopingEnvironmentSetter::new(environment_setter, platform_filter));
-
+        let environment_setter = Arc::new(EnvironmentSetter::new(directory_finder.clone()));
+        let looping_environment_setter = Arc::new(LoopingEnvironmentSetter::new(environment_setter, platform_filter.clone()));
+        let install_command_filter = Arc::new(InstallCommandFilter::new(directory_finder.clone()));
+        let install_command_executor = Arc::new(InstallCommandExecutor::new(command_executor.clone(), install_command_filter, directory_finder));
+        let looping_install_command_executor = Arc::new(LoopingInstallCommandExecutor::new(install_command_executor, platform_filter));
         Self {
             dependency_instructions_list_retriever: looping_dependency_instructions_retriever,
             looping_template_retriever,
             looping_dependency_downloader,
             looping_environment_setter,
+            looping_install_command_executor,
             command_executor,
         }
     }
@@ -103,7 +107,9 @@ impl CommandWithPathExecutor {
             .download_dependencies(dependency_instructions_list.clone())
             .await;
         self.looping_environment_setter
-            .set_environment_variables(dependency_instructions_list);
+            .set_environment_variables(dependency_instructions_list.clone());
+        self.looping_install_command_executor
+            .run_install_commands(dependency_instructions_list);
         self.command_executor.execute_command(commands);
     }
 }
@@ -112,6 +118,7 @@ impl CommandWithPathExecutor {
 mod tests {
     use super::*;
     use crate::solipath_commandline::command_executor::MockCommandExecutorTrait;
+    use crate::solipath_commandline::looping_install_command_executor::MockLoopingInstallCommandExecutorTrait;
     use crate::solipath_dependency_download::looping_dependency_downloader::MockLoopingDependencyDownloaderTrait;
     use crate::solipath_environment_variable::looping_environment_setter::MockLoopingEnvironmentSetterTrait;
     use crate::solipath_instructions::data::dependency_instructions::DependencyInstructions;
@@ -158,6 +165,12 @@ mod tests {
             .expect_set_environment_variables()
             .with(eq(combined_instructions.clone()))
             .return_const(());
+        let mut looping_command_executor = MockLoopingInstallCommandExecutorTrait::new();
+        looping_command_executor
+            .expect_run_install_commands()
+            .with(eq(combined_instructions.clone()))
+            .return_const(());
+
         let mut command_executor = MockCommandExecutorTrait::new();
         command_executor
             .expect_execute_command()
@@ -168,6 +181,7 @@ mod tests {
             looping_template_retriever: Arc::new(looping_template_retriever),
             looping_dependency_downloader: Arc::new(looping_dependency_downloader),
             looping_environment_setter: Arc::new(looping_environment_setter),
+            looping_install_command_executor: Arc::new(looping_command_executor),
             command_executor: Arc::new(command_executor),
         };
         command_with_path_executor

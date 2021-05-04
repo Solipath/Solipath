@@ -30,7 +30,7 @@ impl FileDecompressorTrait for FileDecompressor {
         println!("starting to move {} to {:?}", file_name, target_directory);
         if file_name.ends_with(".zip") {
             unzip_to_destination(source_file, target_directory);
-        } else if file_name.ends_with(".tar.gz") {
+        } else if file_name.ends_with(".tar.gz") || file_name.ends_with(".tgz") {
             extract_tar_gz_to_destination(source_file, target_directory);
         } else {
             just_copy_file_to_destination(source_file, target_directory, file_name);
@@ -112,6 +112,22 @@ mod test {
         expected_destination_file.push("file_in_tar_gz.txt");
         let mut source_file = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         source_file.push("tests/resources/tar_gz_file.tar.gz");
+
+        let file_decompressor = FileDecompressor::new();
+        file_decompressor.decompress_file_to_directory(&source_file, &target_directory);
+
+        let file_contents = fs::read_to_string(expected_destination_file.to_str().unwrap())
+            .expect("something went wrong trying to read file");
+        assert_eq!(file_contents, "this is a file inside a .tar.gz\n");
+    }
+    #[test]
+    fn decompresses_tar_gz_file_to_destination_directory_with_tgz_extension() {
+        let temp_dir = tempdir().unwrap();
+        let target_directory = temp_dir.path().to_path_buf();
+        let mut expected_destination_file = target_directory.clone();
+        expected_destination_file.push("file_in_tar_gz.txt");
+        let mut source_file = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        source_file.push("tests/resources/tar_gz_file.tgz");
 
         let file_decompressor = FileDecompressor::new();
         file_decompressor.decompress_file_to_directory(&source_file, &target_directory);

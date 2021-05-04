@@ -3,6 +3,7 @@ use crate::solipath_instructions::data::template::Template;
 use crate::solipath_instructions::data::{
     download_instruction::DownloadInstruction, environment_variable::EnvironmentVariable,
     install_instructions::InstallInstructions,
+    install_command::InstallCommand
 };
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -30,5 +31,8 @@ impl DependencyInstructions {
     }
     pub fn get_templates(&self) -> Vec<Template> {
         self.install_instructions.get_templates()
+    }
+    pub fn get_install_commands(&self) -> Vec<InstallCommand> {
+        self.install_instructions.get_install_commands()
     }
 }

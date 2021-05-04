@@ -101,4 +101,8 @@ impl CommandExecutorTrait for IntegrationTestCommandExecutor {
         let output = command.output().expect("could not retrieve command output");
         *self.output.lock().unwrap() = String::from_utf8_lossy(&output.stdout).to_string()
     }
+
+    fn execute_single_string_command(&self, _: String) {
+    
+    }
 }
