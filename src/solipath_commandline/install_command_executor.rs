@@ -1,6 +1,7 @@
 #[cfg(test)]
 use mockall::automock;
 
+use std::fs::create_dir_all;
 use std::sync::Arc;
 
 use crate::{solipath_commandline::command_executor::CommandExecutorTrait, solipath_dependency_metadata::dependency::Dependency, solipath_directory::solipath_directory_finder::SolipathDirectoryFinderTrait, solipath_instructions::data::install_command::InstallCommand};
@@ -31,6 +32,7 @@ impl InstallCommandExecutorTrait for InstallCommandExecutor {
     fn execute_command(&self, dependency: &Dependency, install_command: &InstallCommand) {
         if self.install_command_filter.command_should_be_run(dependency, &install_command.get_when_to_run_rules()) {
             let downloads_directory = self.directory_finder.get_dependency_downloads_directory(dependency);
+            create_dir_all(&downloads_directory).expect("failed to create downloads directory");
             let command_string = format!("cd {} && {}", downloads_directory.to_str().unwrap(), install_command.get_command());
             self.command_executor.execute_single_string_command(command_string);
         }

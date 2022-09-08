@@ -21,7 +21,7 @@ impl FileDownloaderTrait for DownloadChecker {
         let failure_message = format!("url {} failed to return", url);
         let response = self.reqwest_client.head(url).send().await.expect(&failure_message);
         if !response.status().is_success() {
-            panic!(failure_message);
+            panic!("{}", failure_message);
         }
         println!("{} validated!", url);
         PathBuf::new()

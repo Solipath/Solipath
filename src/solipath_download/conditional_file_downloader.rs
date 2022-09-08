@@ -35,12 +35,12 @@ impl ConditionalFileDownloader {
 #[async_trait]
 impl ConditionalFileDownloaderTrait for ConditionalFileDownloader {
     async fn download_file_if_not_exists(&self, url: &str, path_to_save_to: &Path) {
-        if (!path_to_save_to.exists()) {
+        if !path_to_save_to.exists() {
             self.file_downloader.download_file(url, path_to_save_to).await;
         }
     }
     async fn download_and_decompress_file_if_directory_not_exists(&self, url: &str, directory_to_save_to: &Path) {
-        if (!directory_to_save_to.exists()) {
+        if !directory_to_save_to.exists() {
             let temp_dir = tempdir().unwrap().into_path();
             let downloaded_file = self.file_downloader.download_file_to_directory(url, &temp_dir).await;
             self.file_decompressor
