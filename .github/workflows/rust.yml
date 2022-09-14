@@ -43,7 +43,7 @@ jobs:
     - name: Run tests
       run: cargo test --verbose --release --features=expensive_tests
     - name: Build Release
-      run: cargo build --verbose --release
+      run: cargo build --verbose --release --target ${{matrix.toolchain}}
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
