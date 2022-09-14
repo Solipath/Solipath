@@ -38,12 +38,12 @@ jobs:
       uses: dtolnay/rust-toolchain@stable
       with:
         toolchain: stable
-        target: ${{matrix.toolchain}}
+        target: ${{matrix.target}}
     - uses: actions/checkout@v3
     - name: Run tests
       run: cargo test --verbose --release --features=expensive_tests
     - name: Build Release
-      run: cargo build --verbose --release --target=${{matrix.toolchain}}
+      run: cargo build --verbose --release --target=${{matrix.target}}
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
@@ -51,9 +51,9 @@ jobs:
         prerelease: false
         title: "Latest Build ${{matrix.name}}"
         files: |
-          target/${{matrix.toolchain}}/release/solipath.exe
-          target/${{matrix.toolchain}}/release/download_verifier.exe
-          target/${{matrix.toolchain}}/release/solipath.so
-          target/${{matrix.toolchain}}/release/download_verifier.so
-          target/${{matrix.toolchain}}/release/solipath
-          target/${{matrix.toolchain}}/release/download_verifier
+          target/${{matrix.target}}/release/solipath.exe
+          target/${{matrix.target}}/release/download_verifier.exe
+          target/${{matrix.target}}/release/solipath.so
+          target/${{matrix.target}}/release/download_verifier.so
+          target/${{matrix.target}}/release/solipath
+          target/${{matrix.target}}/release/download_verifier
