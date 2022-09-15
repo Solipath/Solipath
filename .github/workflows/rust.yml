@@ -41,7 +41,7 @@ jobs:
         target: ${{matrix.target}}
     - uses: actions/checkout@v3
     - name: Install Dependencies
-      if: "${{matrix.target}} == 'aarch64-unknown-linux-gnu'""
+      if: "${{matrix.target}} == 'aarch64-unknown-linux-gnu'"
       run: sudo apt-get install gcc-aarch64-linux-gnu
     - name: Run tests
       run: cargo test --verbose --release --features=expensive_tests
