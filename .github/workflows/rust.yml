@@ -44,6 +44,7 @@ jobs:
       if: ${{'aarch64-unknown-linux-gnu' == matrix.target}}
       run: sudo apt-get update && sudo apt-get install gcc-aarch64-linux-gnu
     - name: Run tests
+      if: startsWith(matrix.target, 'x86_64')
       run: cargo test --verbose --release --features=expensive_tests
     - name: Build Release
       run: cargo build --verbose --release --target=${{matrix.target}}
