@@ -38,12 +38,13 @@ jobs:
       uses: dtolnay/rust-toolchain@stable
       with:
         toolchain: stable
+        components: cross
         target: ${{matrix.target}}
     - uses: actions/checkout@v3
     - name: Run tests
       run: cargo test --verbose --release --features=expensive_tests
     - name: Build Release
-      run: cargo build --verbose --release --target=${{matrix.target}}
+      run: cross build --verbose --release --target=${{matrix.target}}
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
