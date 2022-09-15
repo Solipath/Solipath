@@ -1,4 +1,5 @@
 use flate2::read::GzDecoder;
+use sevenz_rust::decompress_file;
 use std::fs;
 use std::fs::create_dir_all;
 use std::fs::File;
@@ -32,11 +33,18 @@ impl FileDecompressorTrait for FileDecompressor {
             unzip_to_destination(source_file, target_directory);
         } else if file_name.ends_with(".tar.gz") || file_name.ends_with(".tgz") {
             extract_tar_gz_to_destination(source_file, target_directory);
-        } else {
+        } else if file_name.ends_with(".7z") {
+            extract_7z_to_destination(source_file, target_directory);
+        }
+         else {
             just_copy_file_to_destination(source_file, target_directory, file_name);
         }
         println!("finished moving {} to {:?}", file_name, target_directory);
     }
+}
+
+fn extract_7z_to_destination(source_file: &Path, target_directory: &Path) {
+    decompress_file(source_file, target_directory).expect("failed to extract file");
 }
 
 fn unzip_to_destination(source_file: &Path, target_directory: &Path) {
@@ -135,5 +143,22 @@ mod test {
         let file_contents = fs::read_to_string(expected_destination_file.to_str().unwrap())
             .expect("something went wrong trying to read file");
         assert_eq!(file_contents, "this is a file inside a .tar.gz\n");
+    }
+
+    #[test]
+    fn decompresses_7z_file_to_destination_directory_with_7z_extension() {
+        let temp_dir = tempdir().unwrap();
+        let target_directory = temp_dir.path().to_path_buf();
+        let mut expected_destination_file = target_directory.clone();
+        expected_destination_file.push("file_in_7z.txt");
+        let mut source_file = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        source_file.push("tests/resources/7z_file.7z");
+
+        let file_decompressor = FileDecompressor::new();
+        file_decompressor.decompress_file_to_directory(&source_file, &target_directory);
+
+        let file_contents = fs::read_to_string(expected_destination_file.to_str().unwrap())
+            .expect("something went wrong trying to read file");
+        assert_eq!(file_contents, "this is a file inside a .7z");
     }
 }
