@@ -28,6 +28,7 @@ jobs:
             target: x86_64-unknown-linux-gnu
           - os: ubuntu-latest
             name: linux_aarch64
+            installDependenciesCommand: apt-get install gcc-aarch64-linux-gnu
             target: aarch64-unknown-linux-gnu
           - os: windows-latest
             name: windows_x86_64
@@ -38,13 +39,14 @@ jobs:
       uses: dtolnay/rust-toolchain@stable
       with:
         toolchain: stable
-        components: cross
         target: ${{matrix.target}}
     - uses: actions/checkout@v3
+    - name: Install Dependencies
+      run: ${{installDependenciesCommand}}
     - name: Run tests
       run: cargo test --verbose --release --features=expensive_tests
     - name: Build Release
-      run: cross build --verbose --release --target=${{matrix.target}}
+      run: cargo build --verbose --release --target=${{matrix.target}}
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
