@@ -28,7 +28,6 @@ jobs:
             target: x86_64-unknown-linux-gnu
           - os: ubuntu-latest
             name: linux_aarch64
-            installDependenciesCommand: apt-get install gcc-aarch64-linux-gnu
             target: aarch64-unknown-linux-gnu
           - os: windows-latest
             name: windows_x86_64
@@ -42,7 +41,8 @@ jobs:
         target: ${{matrix.target}}
     - uses: actions/checkout@v3
     - name: Install Dependencies
-      run: ${{installDependenciesCommand}}
+      if: ${{matrix.target}} == 'aarch64-unknown-linux-gnu'
+      run: apt-get install gcc-aarch64-linux-gnu
     - name: Run tests
       run: cargo test --verbose --release --features=expensive_tests
     - name: Build Release
