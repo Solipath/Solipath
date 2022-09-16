@@ -45,7 +45,7 @@ impl CommandExecutor {
             .stdin(Stdio::inherit())
             .stdout(Stdio::inherit())
             .status()
-            .expect("failed to execute the command!");
+            .unwrap_or_else(|error| panic!("failed to execute the command: {:?}, error: {}", command, error));
     }
 }
 
