@@ -1090,13 +1090,13 @@ dependencies = [
 
 [[package]]
 name = "sevenz-rust"
-version = "0.1.2"
+version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d96f3fd150ac05db8510e788b1a5e02ec3ce0555f3c0c193771e2ff00750a32f"
+checksum = "2e8f97f977241e8ff26693bd0532a35347fe7229bab1f942fb419faee82124ec"
 dependencies = [
  "bit-set",
+ "byteorder",
  "crc 3.0.0",
- "lzma-rs",
 ]
 
 [[package]]
@@ -1140,6 +1140,7 @@ dependencies = [
  "futures",
  "glob",
  "hyperx",
+ "lzma-rs",
  "mockall",
  "openssl",
  "reqwest",

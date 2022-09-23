@@ -43,13 +43,13 @@ async fn install_java_integration_test() {
     let command_with_path_executor =
         CommandWithPathExecutor::new_with_directory_finder(Arc::new(directory_finder), command_executor.clone());
     let arguments = vec!["java".to_string(), "--version".to_string()];
-    let dependency_list = vec![Dependency::new("java", "15.0.2+7")];
+    let dependency_list = vec![Dependency::new("java", "17")];
     command_with_path_executor
         .set_path_and_execute_command(dependency_list, &arguments)
         .await;
 
     let output = command_executor.get_output();
-    assert!(output.starts_with("openjdk 15.0.2 2021-01-19"));
+    assert!(output.starts_with("openjdk 17.0.4.1 2022-08-12"));
 }
 
 struct IntegrationTestSolipathDirectoryFinder {
