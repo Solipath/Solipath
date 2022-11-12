@@ -2,6 +2,7 @@
 use mockall::automock;
 
 use std::fs::create_dir_all;
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use crate::{solipath_commandline::command_executor::CommandExecutorTrait, solipath_dependency_metadata::dependency::Dependency, solipath_directory::solipath_directory_finder::SolipathDirectoryFinderTrait, solipath_instructions::data::install_command::InstallCommand};
@@ -33,11 +34,21 @@ impl InstallCommandExecutorTrait for InstallCommandExecutor {
         if self.install_command_filter.command_should_be_run(dependency, &install_command.get_when_to_run_rules()) {
             let downloads_directory = self.directory_finder.get_dependency_downloads_directory(dependency);
             create_dir_all(&downloads_directory).expect("failed to create downloads directory");
-            let command_string = format!("cd {} && {}", downloads_directory.to_str().unwrap(), install_command.get_command());
+
+            let command_string = format!("{} && {}", switch_to_download_directory_command(&downloads_directory), install_command.get_command());
             self.command_executor.execute_single_string_command(command_string);
         }
     }
 }
+
+fn switch_to_download_directory_command(downloads_directory: &PathBuf)-> String {
+    if std::env::consts::OS == "windows" {
+        format!("cd /d {}", downloads_directory.to_str().unwrap())
+    } else {
+        format!("cd {}", downloads_directory.to_str().unwrap())
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -66,11 +77,14 @@ mod tests {
             .return_const("downloads_directory");
         let mut command_executor = MockCommandExecutorTrait::new();
         
-        command_executor.expect_execute_single_string_command()
-            .with(eq("cd downloads_directory && do something".to_string()))
+        let command_expectation = command_executor.expect_execute_single_string_command();
+        if std::env::consts::OS == "windows" {
+            command_expectation.with(eq("cd /d downloads_directory && do something".to_string()))
             .return_const(());
-        
-
+        } else {
+            command_expectation.with(eq("cd downloads_directory && do something".to_string()))
+            .return_const(());
+        }
         let install_command_executor = InstallCommandExecutor::new(
             Arc::new(command_executor),
             Arc::new(command_filter),
