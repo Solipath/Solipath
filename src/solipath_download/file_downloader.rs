@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use reqwest::Client;
+use reqwest::Error;
 use reqwest::Response;
 use std::path::Path;
 use std::path::PathBuf;
@@ -7,6 +8,7 @@ use tokio::{
     fs::{create_dir_all, File},
     io::AsyncWriteExt,
 };
+
 use crate::solipath_download::file_name_retriever::*;
 
 #[cfg(test)]
@@ -30,13 +32,27 @@ impl FileDownloader {
         }
     }
 
-    async fn make_request(&self, url: &str) -> Response {
-        self.reqwest_client
-            .get(url)
-            .send()
-            .await
-            .expect("file download failed!")
+    async fn repeat_request(&self, url: &str) -> Response {
+        let mut number_of_tries = 0;
+        let max_number_of_tries = 3;
+        let mut result = self.make_request(url).await;
+        while result.is_err() && number_of_tries < max_number_of_tries{
+            result = self.make_request(url).await;
+            number_of_tries += 1;
+        }
+        result.expect(&format!("failed to download file: {}", url))
     }
+
+    async fn make_request(&self, url: &str) -> Result<Response, Error> {
+        self.reqwest_client
+                    .get(url)
+                    .send()
+                    .await.and_then(|response| response.error_for_status())
+    }
+
+    
+
+
     async fn stream_response_output_to_file(&self, response: &mut Response, file: &mut File) {
         while let Some(chunk) = response.chunk().await.expect("file download failed!") {
             file.write_all(&chunk)
@@ -50,7 +66,7 @@ impl FileDownloader {
 impl FileDownloaderTrait for FileDownloader {
     async fn download_file_to_directory(&self, url: &str, directory_to_save_to: &Path) -> PathBuf {
         println!("downloading {}...", url);
-        let mut response = self.make_request(url).await;
+        let mut response = self.repeat_request(url).await;
         create_dir_all(&directory_to_save_to)
             .await
             .expect("failed to create directory");
@@ -66,7 +82,7 @@ impl FileDownloaderTrait for FileDownloader {
     }
     async fn download_file(&self, url: &str, path_to_save_to: &Path) {
         println!("downloading {}...", url);
-        let mut response = self.make_request(url).await;
+        let mut response = self.repeat_request(url).await;
         let parent_directory = path_to_save_to.parent().unwrap();
         create_dir_all(&parent_directory)
             .await
@@ -127,6 +143,15 @@ DEALINGS IN THE SOFTWARE.
 
         assert_eq!(file_contents, DOWNLOAD_CONTENT);
     }
+
+    #[tokio::test]
+    #[should_panic(expected="failed to download file: https://raw.githubusercontent.com/rust-lang/rust/master/NONEXISTENT_FILE")]
+    async fn a_404_throws_an_exception(){
+        let file_downloader = FileDownloader::new();
+        file_downloader.repeat_request("https://raw.githubusercontent.com/rust-lang/rust/master/NONEXISTENT_FILE").await;
+    }
+
+
 
     #[tokio::test]
     async fn can_download_a_file_to_directory() {
