@@ -99,7 +99,7 @@ mod test {
             .expect_download_file_then_parse_to_string()
             .withf(move |url, path| {
                 url == "https://raw.githubusercontent.com/Solipath/Solipath-Install-Instructions/main/name/version/install_instructions.json"
-                    && path.clone() == path_to_downloaded_file.clone()
+                    && path == path_to_downloaded_file.clone()
             })
             .times(1)
             .return_const("{}");

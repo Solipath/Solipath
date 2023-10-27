@@ -116,7 +116,7 @@ mod test {
             .expect_download_file_then_parse_to_string()
             .withf(move |url, path| {
                 url == "https://raw.githubusercontent.com/Solipath/Solipath-Install-Instructions/main/java/templates/template1.json"
-                && path.clone() == PathBuf::from("/something/template1.json")
+                && path == PathBuf::from("/something/template1.json")
             })
             .times(1)
             .return_const(r#"{"downloads": [{"url": "${key1}.com", "destination_directory": "/${key2}"}]}"#);

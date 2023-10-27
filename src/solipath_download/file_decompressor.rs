@@ -1,4 +1,5 @@
 use flate2::read::GzDecoder;
+use std::io::Read;
 use sevenz_rust::decompress_file;
 use std::fs;
 use std::fs::create_dir_all;
@@ -8,6 +9,7 @@ use std::io::Cursor;
 use std::path::Path;
 use tar::Archive;
 use zip::ZipArchive;
+use bzip2_rs::decoder::DecoderReader;
 
 #[cfg(test)]
 use mockall::automock;
@@ -36,6 +38,8 @@ impl FileDecompressorTrait for FileDecompressor {
             extract_tar_gz_to_destination(source_file, target_directory);
         } else if file_name.ends_with(".tar.xz") {
             extract_tar_xz_to_destination(source_file, target_directory);
+        } else if file_name.ends_with(".tar.bz2") {
+            extract_tar_bz2_to_destination(source_file, target_directory);
         } else if file_name.ends_with(".7z") {
             extract_7z_to_destination(source_file, target_directory);
         } else {
@@ -43,6 +47,16 @@ impl FileDecompressorTrait for FileDecompressor {
         }
         println!("finished moving {} to {:?}", file_name, target_directory);
     }
+}
+
+fn extract_tar_bz2_to_destination(source_file: &Path, target_directory: &Path) {
+    let tar_bz2_file = File::open(source_file).expect("failed to open file");
+    let mut decoder_reader = DecoderReader::new(&tar_bz2_file);//::xz_decompress(&mut buffered_reader, &mut tar_data).expect("failed to decompresss xz file");
+    let mut tar_data = Vec::new(); 
+    decoder_reader.read_to_end(&mut tar_data).expect("failed to decompress bz2 file");
+    let mut tar_cursor = Cursor::new(tar_data);
+    let mut archive = Archive::new(&mut tar_cursor);
+    archive.unpack(&target_directory).expect("failed to extract tar file");
 }
 
 fn extract_tar_xz_to_destination(source_file: &Path, target_directory: &Path) {
@@ -125,6 +139,23 @@ mod test {
     }
 
     #[test]
+    fn decompresses_tar_bz2_file_to_destination_directory() {
+        let temp_dir = tempdir().unwrap();
+        let target_directory = temp_dir.path().to_path_buf();
+        let mut expected_destination_file = target_directory.clone();
+        expected_destination_file.push("tar_bz2_file.txt");
+        let mut source_file = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        source_file.push("tests/resources/tar_bz2_file.tar.bz2");
+
+        let file_decompressor = FileDecompressor::new();
+        file_decompressor.decompress_file_to_directory(&source_file, &target_directory);
+
+        let file_contents = fs::read_to_string(expected_destination_file.to_str().unwrap())
+            .expect("something went wrong trying to read file");
+        assert_eq!(file_contents, "tar bz2 file");
+    }
+
+    #[test]
     fn decompresses_tar_gz_file_to_destination_directory() {
         let temp_dir = tempdir().unwrap();
         let target_directory = temp_dir.path().to_path_buf();
@@ -140,6 +171,7 @@ mod test {
             .expect("something went wrong trying to read file");
         assert_eq!(file_contents, "this is a file inside a .tar.gz\n");
     }
+
     #[test]
     fn decompresses_tar_gz_file_to_destination_directory_with_tgz_extension() {
         let temp_dir = tempdir().unwrap();

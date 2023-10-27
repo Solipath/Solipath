@@ -60,7 +60,7 @@ mod test {
         let mut mock_file_downloader = MockConditionalFileDownloaderTrait::new();
         mock_file_downloader
             .expect_download_file_if_not_exists()
-            .withf(move |url, path| url == passed_in_url && path.clone() == copy_path_to_downloaded_file)
+            .withf(move |url, path| url == passed_in_url && path == copy_path_to_downloaded_file)
             .times(1)
             .return_const(());
 
