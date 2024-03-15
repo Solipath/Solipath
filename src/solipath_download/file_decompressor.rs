@@ -155,6 +155,8 @@ mod test {
             .expect("something went wrong trying to read file");
         assert_eq!(file_contents, "this file is nested inside a zip file\n");
     }
+
+    #[cfg(not(target_os="windows"))]
     #[test]
     fn decompresses_zip_file_to_destination_directory_and_symlinks_still_work() {
         let temp_dir = tempdir().unwrap();
