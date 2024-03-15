@@ -1,5 +1,8 @@
 use flate2::read::GzDecoder;
+use rc_zip::parse::EntryKind;
+use rc_zip_sync::ReadZip;
 use std::io::Read;
+use std::io::Write;
 use sevenz_rust::decompress_file;
 use std::fs;
 use std::fs::create_dir_all;
@@ -8,7 +11,6 @@ use std::io::BufReader;
 use std::io::Cursor;
 use std::path::Path;
 use tar::Archive;
-use zip::ZipArchive;
 use bzip2_rs::decoder::DecoderReader;
 
 #[cfg(test)]
@@ -75,12 +77,46 @@ fn extract_7z_to_destination(source_file: &Path, target_directory: &Path) {
 
 fn unzip_to_destination(source_file: &Path, target_directory: &Path) {
     let zip_file = File::open(source_file).expect("failed to open file");
-    let buffered_reader = BufReader::new(zip_file);
-    ZipArchive::new(buffered_reader)
-        .expect("failed to open zip file")
-        .extract(target_directory)
-        .expect("failed to extract file");
+    zip_file.read_zip().expect("failed to open zip file").entries()
+        .for_each(|file| {
+            let mut new_file_path = target_directory.to_path_buf();
+            new_file_path.push(file.name.clone());
+            match file.kind() {
+                EntryKind::Symlink => {
+                    std::fs::create_dir_all(new_file_path.parent().expect("all full entry paths should have parent paths"))
+                        .expect("failed to create parent directories");
+                    let symlink = String::from_utf8(file.bytes().expect("failed to read file"))
+                            .expect("failed to set symlink to string");
+                    #[cfg(any(target_os = "windows"))]
+                    {
+                        std::os::windows::fs::symlink_file(symlink, &new_file_path).expect("failed to create symlink");
+                    }
+                    #[cfg(not(any(target_os = "windows")))]
+                    {
+                        std::os::unix::fs::symlink(symlink, &new_file_path).expect("failed to create symlink");
+                    }
+                },
+                EntryKind::Directory => {
+                    fs::create_dir_all(new_file_path).expect("failed to create directories");
+                },
+                EntryKind::File => {
+                    std::fs::create_dir_all(new_file_path.parent() .expect("all full entry paths should have parent paths"))
+                        .expect("failed to create parent directories");
+                    let mut new_file = File::create(new_file_path).expect("failed to create file");
+                    new_file.write_all(&file.bytes().expect("failed to read file")).expect("failed to write file");
+                }
+            }
+    });
 }
+
+// fn unzip_to_destination(source_file: &Path, target_directory: &Path) {
+//     let zip_file = File::open(source_file).expect("failed to open file");
+//     let buffered_reader = BufReader::new(zip_file);
+//     ZipArchive::new(buffered_reader)
+//         .expect("failed to open zip file")
+//         .extract(target_directory)
+//         .expect("failed to extract file");
+// }
 
 fn extract_tar_gz_to_destination(source_file: &Path, target_directory: &Path) {
     let tar_gz = File::open(source_file).expect("failed to open file");
@@ -137,6 +173,22 @@ mod test {
         let file_contents = fs::read_to_string(expected_destination_file.to_str().unwrap())
             .expect("something went wrong trying to read file");
         assert_eq!(file_contents, "this file is inside a zip file\n");
+    }
+    #[test]
+    fn decompresses_zip_file_to_destination_directory_nested_folder() {
+        let temp_dir = tempdir().unwrap();
+        let target_directory = temp_dir.path().to_path_buf();
+        let mut expected_destination_file = target_directory.clone();
+        expected_destination_file.push("folder 1/file_in_zip.txt");
+        let mut source_file = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        source_file.push("tests/resources/zip_file_nested_folder.zip");
+
+        let file_decompressor = FileDecompressor::new();
+        file_decompressor.decompress_file_to_directory(&source_file, &target_directory);
+
+        let file_contents = fs::read_to_string(expected_destination_file.to_str().unwrap())
+            .expect("something went wrong trying to read file");
+        assert_eq!(file_contents, "this file is nested inside a zip file\n");
     }
     #[test]
     fn decompresses_zip_file_to_destination_directory_and_symlinks_still_work() {
