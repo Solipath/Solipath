@@ -99,8 +99,9 @@ fn just_copy_file_to_destination(source_file: &Path, target_directory: &Path, fi
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::fs;
+    use std::fs::{self};
     use std::path::PathBuf;
+    use std::str::FromStr;
     use tempfile::tempdir;
 
     #[test]
@@ -137,6 +138,21 @@ mod test {
             .expect("something went wrong trying to read file");
         assert_eq!(file_contents, "this file is inside a zip file\n");
     }
+    #[test]
+    fn decompresses_zip_file_to_destination_directory_and_symlinks_still_work() {
+        let temp_dir = tempdir().unwrap();
+        let target_directory = temp_dir.path().to_path_buf();
+        let mut expected_destination_file = target_directory.clone();
+        expected_destination_file.push("mySymlink");
+        let mut source_file = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        source_file.push("tests/resources/compressed_symlink.zip");
+
+        let file_decompressor = FileDecompressor::new();
+        file_decompressor.decompress_file_to_directory(&source_file, &target_directory);
+        assert!(expected_destination_file.is_symlink());
+        assert_eq!(PathBuf::from_str("./simple_file.txt").unwrap(), 
+        fs::read_link(expected_destination_file).unwrap());
+    }
 
     #[test]
     fn decompresses_tar_bz2_file_to_destination_directory() {
@@ -154,6 +170,7 @@ mod test {
             .expect("something went wrong trying to read file");
         assert_eq!(file_contents, "tar bz2 file");
     }
+    
 
     #[test]
     fn decompresses_tar_gz_file_to_destination_directory() {
