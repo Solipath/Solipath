@@ -33,8 +33,9 @@ tempfile = "3.3.0"
 async-trait = "0.1.57"
 futures = "0.3.24"
 tar = "0.4.38"
-rc-zip = "5.0.1"
-rc-zip-sync = "4.0.1"
+#zip = "0.6.4"
+#using this until main zip has option for symlinks
+zip = {git = "https://github.com/bfrazho/zip.git"}
 flate2 = "1.0.24"
 hyperx = "1.4.0"
 glob = "0.3.0"

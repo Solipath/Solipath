@@ -1,8 +1,6 @@
 use flate2::read::GzDecoder;
-use rc_zip::parse::EntryKind;
-use rc_zip_sync::ReadZip;
+use zip::ZipArchive;
 use std::io::Read;
-use std::io::Write;
 use sevenz_rust::decompress_file;
 use std::fs;
 use std::fs::create_dir_all;
@@ -75,48 +73,15 @@ fn extract_7z_to_destination(source_file: &Path, target_directory: &Path) {
     decompress_file(source_file, target_directory).expect("failed to extract file");
 }
 
+
 fn unzip_to_destination(source_file: &Path, target_directory: &Path) {
     let zip_file = File::open(source_file).expect("failed to open file");
-    zip_file.read_zip().expect("failed to open zip file").entries()
-        .for_each(|file| {
-            let mut new_file_path = target_directory.to_path_buf();
-            new_file_path.push(file.name.clone());
-            match file.kind() {
-                EntryKind::Symlink => {
-                    std::fs::create_dir_all(new_file_path.parent().expect("all full entry paths should have parent paths"))
-                        .expect("failed to create parent directories");
-                    let symlink = String::from_utf8(file.bytes().expect("failed to read file"))
-                            .expect("failed to set symlink to string");
-                    #[cfg(any(target_os = "windows"))]
-                    {
-                        std::os::windows::fs::symlink_file(symlink, &new_file_path).expect("failed to create symlink");
-                    }
-                    #[cfg(not(any(target_os = "windows")))]
-                    {
-                        std::os::unix::fs::symlink(symlink, &new_file_path).expect("failed to create symlink");
-                    }
-                },
-                EntryKind::Directory => {
-                    fs::create_dir_all(new_file_path).expect("failed to create directories");
-                },
-                EntryKind::File => {
-                    std::fs::create_dir_all(new_file_path.parent() .expect("all full entry paths should have parent paths"))
-                        .expect("failed to create parent directories");
-                    let mut new_file = File::create(new_file_path).expect("failed to create file");
-                    new_file.write_all(&file.bytes().expect("failed to read file")).expect("failed to write file");
-                }
-            }
-    });
+    let buffered_reader = BufReader::new(zip_file);
+    ZipArchive::new(buffered_reader)
+        .expect("failed to open zip file")
+        .extract(target_directory)
+        .expect("failed to extract file");
 }
-
-// fn unzip_to_destination(source_file: &Path, target_directory: &Path) {
-//     let zip_file = File::open(source_file).expect("failed to open file");
-//     let buffered_reader = BufReader::new(zip_file);
-//     ZipArchive::new(buffered_reader)
-//         .expect("failed to open zip file")
-//         .extract(target_directory)
-//         .expect("failed to extract file");
-// }
 
 fn extract_tar_gz_to_destination(source_file: &Path, target_directory: &Path) {
     let tar_gz = File::open(source_file).expect("failed to open file");
