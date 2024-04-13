@@ -1,12 +1,13 @@
 #[cfg(test)]
 use mockall::automock;
 use std::process::Command;
+use std::process::ExitStatus;
 use std::process::Stdio;
 
 #[cfg_attr(test, automock)]
 pub trait CommandExecutorTrait {
-    fn execute_command(&self, commands: &[String]);
-    fn execute_single_string_command(&self, command: String);
+    fn execute_command(&self, commands: &[String]) -> ExitStatus;
+    fn execute_single_string_command(&self, command: String) -> ExitStatus;
 }
 
 pub struct CommandExecutor;
@@ -40,23 +41,23 @@ impl CommandExecutor {
         }
     }
 
-    pub fn run_command(&self, command: &mut Command){
+    pub fn run_command(&self, command: &mut Command) -> ExitStatus{
         command
             .stdin(Stdio::inherit())
             .stdout(Stdio::inherit())
             .status()
-            .unwrap_or_else(|error| panic!("failed to execute the command: {:?}, error: {}", command, error));
+            .unwrap_or_else(|error| panic!("failed to execute the command: {:?}, error: {}", command, error))
     }
 }
 
 #[cfg_attr(test, automock)]
 impl CommandExecutorTrait for CommandExecutor {
-    fn execute_command(&self, commands: &[String]) {
-        self.run_command(&mut self.setup_command(commands));
+    fn execute_command(&self, commands: &[String]) -> ExitStatus{
+        self.run_command(&mut self.setup_command(commands))
     }
 
-    fn execute_single_string_command(&self, command: String) {
-        self.run_command(&mut self.setup_single_string_command(&command));
+    fn execute_single_string_command(&self, command: String) -> ExitStatus{
+        self.run_command(&mut self.setup_single_string_command(&command))
     }
 }
 

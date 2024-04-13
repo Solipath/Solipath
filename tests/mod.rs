@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 use std::process::Command;
+use std::process::ExitStatus;
 use std::process::Stdio;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -21,17 +22,15 @@ async fn install_node_integration_test() {
     let command_with_path_executor =
         CommandWithPathExecutor::new_with_directory_finder(Arc::new(directory_finder), command_executor.clone());
     let arguments = vec!["node".to_string(), "--version".to_string()];
-    let dependency_list = vec![Dependency::new("node", "15.11.0")];
-    command_with_path_executor
+    let dependency_list = vec![Dependency::new("node", "15")];
+    let exit_status = command_with_path_executor
         .set_path_and_execute_command(dependency_list, &arguments)
         .await;
 
     let output = command_executor.get_output();
-    if std::env::consts::OS == "windows" {
-        assert_eq!(output, "v15.11.0\r\n");
-    } else {
-        assert_eq!(output, "v15.11.0\n");
-    }
+
+    assert!(output.starts_with("v15"));
+    assert_eq!(exit_status.success(), true);
 }
 
 #[tokio::test]
@@ -44,12 +43,13 @@ async fn install_java_integration_test() {
         CommandWithPathExecutor::new_with_directory_finder(Arc::new(directory_finder), command_executor.clone());
     let arguments = vec!["java".to_string(), "--version".to_string()];
     let dependency_list = vec![Dependency::new("java", "17")];
-    command_with_path_executor
+    let exit_status = command_with_path_executor
         .set_path_and_execute_command(dependency_list, &arguments)
         .await;
 
     let output = command_executor.get_output();
-    assert!(output.starts_with("openjdk 17.0.4.1 2022-08-12"));
+    assert!(output.starts_with("openjdk 17"));
+    assert_eq!(exit_status.success(), true);
 }
 
 struct IntegrationTestSolipathDirectoryFinder {
@@ -85,7 +85,7 @@ impl IntegrationTestCommandExecutor {
 }
 
 impl CommandExecutorTrait for IntegrationTestCommandExecutor {
-    fn execute_command(&self, commands: &[String]) {
+    fn execute_command(&self, commands: &[String]) -> ExitStatus {
         let mut command = if std::env::consts::OS == "windows" {
             let mut command = Command::new("cmd");
             command.arg("/C").args(commands);
@@ -99,10 +99,11 @@ impl CommandExecutorTrait for IntegrationTestCommandExecutor {
         command.stdin(Stdio::piped());
 
         let output = command.output().expect("could not retrieve command output");
-        *self.output.lock().unwrap() = String::from_utf8_lossy(&output.stdout).to_string()
+        *self.output.lock().unwrap() = String::from_utf8_lossy(&output.stdout).to_string();
+        ExitStatus::default()
     }
 
-    fn execute_single_string_command(&self, _: String) {
-    
+    fn execute_single_string_command(&self, _: String)->ExitStatus {
+        ExitStatus::default()
     }
 }

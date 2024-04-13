@@ -53,6 +53,7 @@ fn switch_to_download_directory_command(downloads_directory: &PathBuf)-> String 
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
+    use std::process::ExitStatus;
 
     use mockall::predicate::eq;
 
@@ -80,10 +81,10 @@ mod tests {
         let command_expectation = command_executor.expect_execute_single_string_command();
         if std::env::consts::OS == "windows" {
             command_expectation.with(eq("cd /d downloads_directory && do something".to_string()))
-            .return_const(());
+            .return_const(ExitStatus::default());
         } else {
             command_expectation.with(eq("cd downloads_directory && do something".to_string()))
-            .return_const(());
+            .return_const(ExitStatus::default());
         }
         let install_command_executor = InstallCommandExecutor::new(
             Arc::new(command_executor),

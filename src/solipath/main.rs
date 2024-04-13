@@ -9,7 +9,8 @@ async fn main() {
     let dependency_list: Vec<Dependency> =
         serde_json::from_str(&file_contents).expect("failed to parse dependency file");
     let arguments: Vec<String> = std::env::args().collect();
-    command_with_path_executor
+    let exit_status = command_with_path_executor
         .set_path_and_execute_command(dependency_list, &arguments[1..])
         .await;
+    std::process::exit(exit_status.code().unwrap_or_else(||1));
 }

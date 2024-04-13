@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{process::ExitStatus, sync::Arc};
 
 use crate::solipath_commandline::{command_executor::CommandExecutor, install_command_executor::InstallCommandExecutor, install_command_filter::InstallCommandFilter, looping_install_command_executor::{LoopingInstallCommandExecutor, LoopingInstallCommandExecutorTrait}};
 use crate::solipath_commandline::command_executor::CommandExecutorTrait;
@@ -92,7 +92,7 @@ impl CommandWithPathExecutor {
         }
     }
 
-    pub async fn set_path_and_execute_command(&self, dependency_list: Vec<Dependency>, commands: &[String]) {
+    pub async fn set_path_and_execute_command(&self, dependency_list: Vec<Dependency>, commands: &[String]) -> ExitStatus {
         let mut dependency_instructions_list = self
             .dependency_instructions_list_retriever
             .retrieve_dependency_instructions_list(dependency_list)
@@ -110,7 +110,7 @@ impl CommandWithPathExecutor {
             .set_environment_variables(dependency_instructions_list.clone());
         self.looping_install_command_executor
             .run_install_commands(dependency_instructions_list);
-        self.command_executor.execute_command(commands);
+        self.command_executor.execute_command(commands)
     }
 }
 
@@ -175,7 +175,7 @@ mod tests {
         command_executor
             .expect_execute_command()
             .withf(|actual| actual == vec!["command1".to_string(), "argument1".to_string()])
-            .return_const(());
+            .return_const(ExitStatus::default());
         let command_with_path_executor = CommandWithPathExecutor {
             dependency_instructions_list_retriever: Arc::new(dependency_instructions_list_retriever),
             looping_template_retriever: Arc::new(looping_template_retriever),
