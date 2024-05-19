@@ -65,6 +65,12 @@ fn recurse(path: impl AsRef<Path>) -> Vec<PathBuf> {
     }).collect()
 }
 
+#[cfg(not(target_os="macos"))]
+fn extract_dmg_to_destination(_: &Path, _: &Path) {
+    //do nothing because this should only be used for macos
+}
+
+#[cfg(target_os="macos")]
 fn extract_dmg_to_destination(source_file: &Path, target_directory: &Path) {
     let attached_dmg = Attach::new(source_file).mount_temp().hidden().force_readonly().with().expect("error attaching dmg");
     let attached_path = attached_dmg.mount_point.clone();
