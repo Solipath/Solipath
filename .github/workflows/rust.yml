@@ -17,10 +17,10 @@ jobs:
     strategy: 
       matrix:
         include:
-          - os: macos-latest
+          - os: macos-12
             name: macos_x86_64
             target: x86_64-apple-darwin
-          - os: macos-latest
+          - os: macos-12
             name: macos_aarch64
             target: aarch64-apple-darwin
           - os: ubuntu-latest

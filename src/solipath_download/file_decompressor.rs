@@ -1,3 +1,4 @@
+use dmgwiz::DmgWiz;
 use flate2::read::GzDecoder;
 use zip::ZipArchive;
 use std::io::Read;
@@ -42,6 +43,8 @@ impl FileDecompressorTrait for FileDecompressor {
             extract_tar_bz2_to_destination(source_file, target_directory);
         } else if file_name.ends_with(".7z") {
             extract_7z_to_destination(source_file, target_directory);
+        } else if file_name.ends_with(".dmg"){
+            extract_dmg_to_destination(source_file, target_directory);
         } else {
             just_copy_file_to_destination(source_file, target_directory, file_name);
         }
@@ -49,9 +52,24 @@ impl FileDecompressorTrait for FileDecompressor {
     }
 }
 
+fn extract_dmg_to_destination(source_file: &Path, target_directory: &Path) {
+    let mut dmg_file = File::open(source_file).expect("failed to open file");
+    let mut dmg_wiz = DmgWiz::from_reader(&mut dmg_file, dmgwiz::Verbosity::None)
+        .expect("failed to open dmg file");
+    let mut target_file = target_directory.to_path_buf();
+    let output_file_name = source_file.file_name()
+        .expect("failed to get file name")
+        .to_str().expect("failed to get file name string")
+        .replace(".dmg", ".bin");
+    target_file.push(output_file_name);
+    println!("{:?}",&target_file);
+    let mut output_file = File::create(target_file).expect("failed to open file"); 
+    dmg_wiz.extract_all(&mut output_file).expect("failed to extract dmg file");
+}
+
 fn extract_tar_bz2_to_destination(source_file: &Path, target_directory: &Path) {
     let tar_bz2_file = File::open(source_file).expect("failed to open file");
-    let mut decoder_reader = DecoderReader::new(&tar_bz2_file);//::xz_decompress(&mut buffered_reader, &mut tar_data).expect("failed to decompresss xz file");
+    let mut decoder_reader = DecoderReader::new(&tar_bz2_file);
     let mut tar_data = Vec::new(); 
     decoder_reader.read_to_end(&mut tar_data).expect("failed to decompress bz2 file");
     let mut tar_cursor = Cursor::new(tar_data);
@@ -103,6 +121,7 @@ mod test {
     use std::fs::{self};
     use std::path::PathBuf;
     use std::str::FromStr;
+    use mockall::predicate::path;
     use tempfile::tempdir;
 
     #[test]
@@ -240,6 +259,20 @@ mod test {
         let file_contents = fs::read_to_string(expected_destination_file.to_str().unwrap())
             .expect("something went wrong trying to read file");
         assert_eq!(file_contents, "this is a file inside a .7z");
+    }
+
+    #[test]
+    fn decompresses_dmg_file_to_destination_directory_with_dmg_extension() {
+        let temp_dir = tempdir().unwrap();
+        let target_directory = temp_dir.path().to_path_buf();
+        let mut expected_destination_file = target_directory.clone();
+        expected_destination_file.push("dmgFile.bin");
+        let mut source_file = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        source_file.push("tests/resources/dmgFile.dmg");
+
+        let file_decompressor = FileDecompressor::new();
+        file_decompressor.decompress_file_to_directory(&source_file, &target_directory);
+        assert!(expected_destination_file.exists());
     }
 
     #[test]
