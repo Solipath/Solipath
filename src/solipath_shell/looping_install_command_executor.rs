@@ -3,7 +3,7 @@ use std::sync::Arc;
 #[cfg(test)]
 use mockall::automock;
 
-use crate::{solipath_commandline::install_command_executor::InstallCommandExecutorTrait, solipath_instructions::data::dependency_instructions::DependencyInstructions};
+use crate::{solipath_shell::install_command_executor::InstallCommandExecutorTrait, solipath_instructions::data::dependency_instructions::DependencyInstructions};
 use crate::solipath_platform::platform_filter::PlatformFilterTrait;
 
 
@@ -54,7 +54,7 @@ mod tests {
     use crate::{solipath_dependency_metadata::dependency::Dependency, solipath_instructions::data::install_command::InstallCommand, solipath_platform::platform::Platform};
     use crate::solipath_instructions::data::install_instructions::InstallInstructions;
     use crate::solipath_platform::platform_filter::MockPlatformFilterTrait;
-    use crate::solipath_commandline::install_command_executor::MockInstallCommandExecutorTrait;
+    use crate::solipath_shell::install_command_executor::MockInstallCommandExecutorTrait;
 
     use crate::solipath_platform::platform_filter::mock::verify_platform_filter;
 

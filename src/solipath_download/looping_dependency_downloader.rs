@@ -5,10 +5,10 @@ use std::sync::Arc;
 #[cfg(test)]
 use mockall::automock;
 
-use crate::solipath_dependency_download::dependency_downloader::DependencyDownloaderTrait;
 use crate::{
     solipath_instructions::data::dependency_instructions::DependencyInstructions,
     solipath_platform::platform_filter::PlatformFilterTrait,
+    solipath_download::dependency_downloader::DependencyDownloaderTrait
 };
 
 #[cfg_attr(test, automock)]
@@ -61,7 +61,7 @@ impl LoopingDependencyDownloaderTrait for LoopingDependencyDownloader {
 mod tests {
 
     use super::*;
-    use crate::solipath_dependency_download::dependency_downloader::MockDependencyDownloaderTrait;
+    use crate::solipath_download::dependency_downloader::MockDependencyDownloaderTrait;
     use crate::solipath_dependency_metadata::dependency::Dependency;
     use crate::solipath_instructions::data::download_instruction::DownloadInstruction;
     use crate::solipath_instructions::data::install_instructions::InstallInstructions;

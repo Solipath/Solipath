@@ -1,10 +1,10 @@
 use std::{process::ExitStatus, sync::Arc};
 
-use crate::solipath_commandline::{command_executor::CommandExecutor, install_command_executor::InstallCommandExecutor, install_command_filter::InstallCommandFilter, looping_install_command_executor::{LoopingInstallCommandExecutor, LoopingInstallCommandExecutorTrait}};
-use crate::solipath_commandline::command_executor::CommandExecutorTrait;
-use crate::solipath_dependency_download::dependency_downloader::DependencyDownloader;
-use crate::solipath_dependency_download::looping_dependency_downloader::LoopingDependencyDownloader;
-use crate::solipath_dependency_download::looping_dependency_downloader::LoopingDependencyDownloaderTrait;
+use crate::solipath_shell::{command_executor::CommandExecutor, install_command_executor::InstallCommandExecutor, install_command_filter::InstallCommandFilter, looping_install_command_executor::{LoopingInstallCommandExecutor, LoopingInstallCommandExecutorTrait}};
+use crate::solipath_shell::command_executor::CommandExecutorTrait;
+use crate::solipath_download::dependency_downloader::DependencyDownloader;
+use crate::solipath_download::looping_dependency_downloader::LoopingDependencyDownloader;
+use crate::solipath_download::looping_dependency_downloader::LoopingDependencyDownloaderTrait;
 use crate::solipath_directory::solipath_directory_finder::SolipathDirectoryFinder;
 use crate::solipath_directory::solipath_directory_finder::SolipathDirectoryFinderTrait;
 use crate::solipath_download::conditional_file_downloader::ConditionalFileDownloader;
@@ -92,6 +92,14 @@ impl CommandWithPathExecutor {
         }
     }
 
+    pub async fn set_path_from_solipath_file_and_execute_command(&self, commands: &[String]) -> ExitStatus {
+        let file_contents =
+        std::fs::read_to_string("solipath.json").expect("could not find a solipath.json file in current directory");
+        let dependency_list: Vec<Dependency> =
+            serde_json::from_str(&file_contents).expect("failed to parse dependency file");
+        self.set_path_and_execute_command(dependency_list, commands).await
+    }
+
     pub async fn set_path_and_execute_command(&self, dependency_list: Vec<Dependency>, commands: &[String]) -> ExitStatus {
         let mut dependency_instructions_list = self
             .dependency_instructions_list_retriever
@@ -117,9 +125,9 @@ impl CommandWithPathExecutor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::solipath_commandline::command_executor::MockCommandExecutorTrait;
-    use crate::solipath_commandline::looping_install_command_executor::MockLoopingInstallCommandExecutorTrait;
-    use crate::solipath_dependency_download::looping_dependency_downloader::MockLoopingDependencyDownloaderTrait;
+    use crate::solipath_shell::command_executor::MockCommandExecutorTrait;
+    use crate::solipath_shell::looping_install_command_executor::MockLoopingInstallCommandExecutorTrait;
+    use crate::solipath_download::looping_dependency_downloader::MockLoopingDependencyDownloaderTrait;
     use crate::solipath_environment_variable::looping_environment_setter::MockLoopingEnvironmentSetterTrait;
     use crate::solipath_instructions::data::dependency_instructions::DependencyInstructions;
     use crate::solipath_instructions::data::install_instructions::InstallInstructions;

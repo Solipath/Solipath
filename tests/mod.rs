@@ -6,7 +6,7 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use tempfile::tempdir;
 
-use solipath_lib::solipath_commandline::command_executor::CommandExecutorTrait;
+use solipath_lib::solipath_shell::command_executor::CommandExecutorTrait;
 use solipath_lib::solipath_dependency_metadata::dependency::Dependency;
 use solipath_lib::solipath_directory::solipath_directory_finder::SolipathDirectoryFinderTrait;
 use solipath_lib::solipath_execute::command_with_path_executor::CommandWithPathExecutor;

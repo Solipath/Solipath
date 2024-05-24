@@ -12,9 +12,9 @@ use std::sync::Arc;
 use unfiltered_platform::UnfilteredPlatform;
 use fake_decompressor::FakeDecompressor;
 
-use solipath_lib::solipath_dependency_download::looping_dependency_downloader::LoopingDependencyDownloaderTrait;
-use solipath_lib::solipath_dependency_download::looping_dependency_downloader::LoopingDependencyDownloader;
-use solipath_lib::solipath_dependency_download::dependency_downloader::DependencyDownloader;
+use solipath_lib::solipath_download::looping_dependency_downloader::LoopingDependencyDownloaderTrait;
+use solipath_lib::solipath_download::looping_dependency_downloader::LoopingDependencyDownloader;
+use solipath_lib::solipath_download::dependency_downloader::DependencyDownloader;
 use solipath_lib::solipath_template::template_retriever::TemplateRetriever;
 use solipath_lib::solipath_template::template_variable_replacer::TemplateVariableReplacer;
 use solipath_lib::solipath_template::looping_template_retriever::LoopingTemplateRetrieverTrait;

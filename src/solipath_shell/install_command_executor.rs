@@ -5,8 +5,8 @@ use std::fs::create_dir_all;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use crate::{solipath_commandline::command_executor::CommandExecutorTrait, solipath_dependency_metadata::dependency::Dependency, solipath_directory::solipath_directory_finder::SolipathDirectoryFinderTrait, solipath_instructions::data::install_command::InstallCommand};
-use crate::solipath_commandline::install_command_filter::InstallCommandFilterTrait;
+use crate::{solipath_shell::command_executor::CommandExecutorTrait, solipath_dependency_metadata::dependency::Dependency, solipath_directory::solipath_directory_finder::SolipathDirectoryFinderTrait, solipath_instructions::data::install_command::InstallCommand};
+use crate::solipath_shell::install_command_filter::InstallCommandFilterTrait;
 
 #[cfg_attr(test, automock)]
 pub trait InstallCommandExecutorTrait{
@@ -58,9 +58,9 @@ mod tests {
     use mockall::predicate::eq;
 
     use super::*;
-    use crate::solipath_commandline::command_executor::MockCommandExecutorTrait;
+    use crate::solipath_shell::command_executor::MockCommandExecutorTrait;
     use crate::solipath_directory::solipath_directory_finder::MockSolipathDirectoryFinderTrait;
-    use crate::solipath_commandline::install_command_filter::MockInstallCommandFilterTrait;
+    use crate::solipath_shell::install_command_filter::MockInstallCommandFilterTrait;
 
 
     #[test]

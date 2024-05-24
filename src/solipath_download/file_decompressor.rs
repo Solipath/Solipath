@@ -1,4 +1,3 @@
-use dmg::Attach;
 use flate2::read::GzDecoder;
 use zip::ZipArchive;
 use std::fs::read_dir;
@@ -54,6 +53,8 @@ impl FileDecompressorTrait for FileDecompressor {
     }
 }
 
+
+#[allow(dead_code)]
 fn recurse(path: impl AsRef<Path>) -> Vec<PathBuf> {
     let Ok(entries) = read_dir(path) else { return vec![]};
     entries.flatten().flat_map(|entry| {
@@ -72,7 +73,7 @@ fn extract_dmg_to_destination(_: &Path, _: &Path) {
 
 #[cfg(target_os="macos")]
 fn extract_dmg_to_destination(source_file: &Path, target_directory: &Path) {
-    let attached_dmg = Attach::new(source_file).mount_temp().hidden().force_readonly().with().expect("error attaching dmg");
+    let attached_dmg = dmg::Attach::new(source_file).mount_temp().hidden().force_readonly().with().expect("error attaching dmg");
     let attached_path = attached_dmg.mount_point.clone();
     recurse(&attached_path).iter().for_each(|source_path| {
         let relative_path = source_path.strip_prefix(&attached_path).expect("couldn't get relative path for dmg");
