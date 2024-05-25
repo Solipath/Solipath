@@ -7,3 +7,4 @@ pub mod solipath_execute;
 pub mod solipath_instructions;
 pub mod solipath_platform;
 pub mod solipath_template;
+pub mod solipath_cli;

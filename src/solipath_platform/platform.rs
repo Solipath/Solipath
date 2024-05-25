@@ -3,9 +3,9 @@ use std::option::Option;
 
 #[derive(Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct Platform {
-    os: String,
+    pub os: String,
     #[serde(default = "default_architecture")]
-    arch: Option<String>,
+    pub arch: Option<String>,
 }
 
 impl Platform {
