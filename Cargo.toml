@@ -43,6 +43,7 @@ sevenz-rust = "0.5.4"
 lzma-rs = "0.3.0"
 bzip2-rs = {git = "https://github.com/paolobarbolini/bzip2-rs.git"}
 dmg = "0.1.2"
+anyhow = "1.0.86"
 
 
 [dev-dependencies]

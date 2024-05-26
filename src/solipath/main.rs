@@ -10,7 +10,8 @@ async fn main() {
     if is_solipath_command(arguments_without_the_solipath_executable) {
         SolipathCli::new()
             .run_solipath_command(&arguments_without_the_solipath_executable)
-            .await;
+            .await
+            .expect("failed to run cli command");
     } else {
         let command_with_path_executor = CommandWithPathExecutor::new();
         let exit_status = command_with_path_executor

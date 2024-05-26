@@ -42,7 +42,7 @@ impl ConditionalFileDownloaderTrait for ConditionalFileDownloader {
     async fn download_and_decompress_file_if_directory_not_exists(&self, url: &str, directory_to_save_to: &Path) {
         if !directory_to_save_to.exists() {
             let temp_dir = tempdir().unwrap().into_path();
-            let downloaded_file = self.file_downloader.download_file_to_directory(url, &temp_dir).await;
+            let downloaded_file = self.file_downloader.download_file_to_directory(url, &temp_dir).await.expect("Something went wrong while downloading file");
             self.file_decompressor
                 .decompress_file_to_directory(&downloaded_file, &directory_to_save_to);
         }
@@ -111,7 +111,7 @@ mod tests {
             .expect_download_file_to_directory()
             .withf(move |actual_url, _| actual_url == url)
             .times(1)
-            .return_const(PathBuf::from("/output_path/download.zip"));
+            .returning(|_,_|Ok(PathBuf::from("/output_path/download.zip")));
         let mut file_decompressor = MockFileDecompressorTrait::new();
         file_decompressor
             .expect_decompress_file_to_directory()
