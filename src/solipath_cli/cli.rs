@@ -216,7 +216,7 @@ mod test {
             directory_finder: Arc::new(mock_directory_finder),
             current_platform_retriever: Arc::new(mock_current_platform_retriever),
         };
-        solipath_cli.run_solipath_command(&["--update".to_string()]).await.unwrap();
+        assert!(solipath_cli.run_solipath_command(&["--update".to_string()]).await.is_err());
         assert_eq!(
             "not a real executable".to_string(),
             String::from_utf8(fs::read(&fake_solipath_executable).unwrap()).unwrap()
