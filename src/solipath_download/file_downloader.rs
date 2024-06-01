@@ -3,8 +3,10 @@ use async_trait::async_trait;
 use reqwest::Client;
 use reqwest::Error;
 use reqwest::Response;
+use tokio::time::sleep;
 use std::path::Path;
 use std::path::PathBuf;
+use std::time::Duration;
 use tokio::{
     fs::{create_dir_all, File},
     io::AsyncWriteExt,
@@ -40,6 +42,7 @@ impl FileDownloader {
         while result.is_err() && number_of_tries < max_number_of_tries{
             result = self.make_request(url).await;
             number_of_tries += 1;
+            sleep(Duration::new(1u64, 0)).await
         }
         Ok(result.context(format!("failed to download file: {}", url))?)
     }
