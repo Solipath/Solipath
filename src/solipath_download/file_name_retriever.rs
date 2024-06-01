@@ -39,7 +39,13 @@ fn is_filename(param: &DispositionParam) -> bool {
 fn get_string_after_last_forward_slash(url: &str) -> String {
     let index_of_forward_slash: usize = url.rfind('/').expect("could not find a forward slash in url");
     let (_, string_after_last_slash) = url.split_at(index_of_forward_slash + 1);
-    string_after_last_slash.to_string()
+    if let Some(index_of_question_mark) = string_after_last_slash.rfind('?'){
+        let (file_name, _) = string_after_last_slash.split_at(index_of_question_mark);
+        file_name.to_string()
+    } else {
+        string_after_last_slash.to_string()
+    }
+
 }
 
 #[cfg(test)]
@@ -51,6 +57,13 @@ mod tests{
         let url = "https://download.com/something.json";
         let header = HeaderMap::new();
         assert_eq!(get_file_name(url, &header), "something.json");
+    }
+
+    #[test]
+    fn get_file_name_from_response_no_content_disposition_but_with_query_parameter() {
+        let url = "https://download.com/android-studio-2023.3.1.18-linux.tar.gz?cms_redirect=yes&mh=0E&mip=67.149.128.201&mm=28&mn=sn-fvf-quf6&ms=nvh&mt=1717283768&mv=m&mvi=3&pcm2cms=yes&pl=21&shardbypass=sd";
+        let header = HeaderMap::new();
+        assert_eq!(get_file_name(url, &header), "android-studio-2023.3.1.18-linux.tar.gz");
     }
 
     #[test]
