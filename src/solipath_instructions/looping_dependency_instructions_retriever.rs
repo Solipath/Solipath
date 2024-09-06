@@ -51,7 +51,7 @@ impl LoopingDependencyInstructionsRetrieverTrait for LoopingDependencyInstructio
             })
             .map(|dependency| {
                 self.dependency_instructions_retriever
-                    .retrieve_dependency_instructions(dependency.clone())
+                    .retrieve_dependency_instructions(dependency)
             });
         join_all(retrieve_dependency_instruction_tasks).await
     }

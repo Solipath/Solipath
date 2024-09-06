@@ -27,7 +27,7 @@ impl LoopingInstallCommandExecutor {
     fn run_single_install_command(&self, dependency_instructions: DependencyInstructions){
         let dependency = dependency_instructions.get_dependency();
         dependency_instructions.get_install_commands()
-        .into_iter()
+        .iter()
         .filter(|install_command|self.platform_filter.current_platform_is_match(install_command.get_platform_filters()))
         .for_each(move |install_command|
             self.install_command_executor.execute_command(&dependency, &install_command)

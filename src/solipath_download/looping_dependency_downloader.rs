@@ -38,11 +38,11 @@ impl LoopingDependencyDownloader {
 impl LoopingDependencyDownloaderTrait for LoopingDependencyDownloader {
     async fn download_dependencies(&self, dependency_instructions_list: Vec<DependencyInstructions>) {
         let download_tasks = dependency_instructions_list
-            .into_iter()
+            .iter()
             .map(|dependency_instructions| {
                 dependency_instructions
                     .get_downloads()
-                    .into_iter()
+                    .iter()
                     .filter(|download| {
                         self.platform_filter
                             .current_platform_is_match(download.get_platform_filters())

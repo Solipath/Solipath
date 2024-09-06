@@ -13,7 +13,7 @@ use mockall::automock;
 
 #[cfg_attr(test, automock)]
 pub trait EnvironmentSetterTrait {
-    fn set_variable(&self, dependency: Dependency, environment_variable: EnvironmentVariable);
+    fn set_variable(&self, dependency: &Dependency, environment_variable: &EnvironmentVariable);
 }
 
 pub struct EnvironmentSetter {
@@ -37,8 +37,8 @@ impl EnvironmentSetter {
 }
 
 impl EnvironmentSetterTrait for EnvironmentSetter {
-    fn set_variable(&self, dependency: Dependency, environment_variable: EnvironmentVariable) {
-        let absolute_path = self.get_absolute_path_to_environment_variable(&dependency, &environment_variable);
+    fn set_variable(&self, dependency: &Dependency, environment_variable: &EnvironmentVariable) {
+        let absolute_path = self.get_absolute_path_to_environment_variable(dependency, environment_variable);
         let name = environment_variable.get_name();
         if name == "PATH" {
             append_to_path(absolute_path);
@@ -75,7 +75,7 @@ mod test {
             .with(eq(dependency.clone()))
             .return_const(PathBuf::from("solipath/home/downloads/dir"));
         let environment_setter = EnvironmentSetter::new(Arc::new(directory_finder));
-        environment_setter.set_variable(dependency, environment_variable);
+        environment_setter.set_variable(&dependency, &environment_variable);
         assert_eq!(
             PathBuf::from(var("RUST_TEST").unwrap()),
             PathBuf::from("solipath/home/downloads/dir/some/path/location")
@@ -95,7 +95,7 @@ mod test {
             .with(eq(dependency.clone()))
             .return_const(PathBuf::from("solipath/home/downloads"));
         let environment_setter = EnvironmentSetter::new(Arc::new(directory_finder));
-        environment_setter.set_variable(dependency, environment_variable);
+        environment_setter.set_variable(&dependency, &environment_variable);
         let mut expected_path = PathBuf::from("solipath/home/downloads");
         expected_path.push("some/path/location");
         assert!(var("PATH").unwrap().starts_with(expected_path.to_str().unwrap()));

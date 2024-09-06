@@ -31,7 +31,7 @@ impl InstallCommandExecutor {
 
 impl InstallCommandExecutorTrait for InstallCommandExecutor {
     fn execute_command(&self, dependency: &Dependency, install_command: &InstallCommand) {
-        if self.install_command_filter.command_should_be_run(dependency, &install_command.get_when_to_run_rules()) {
+        if self.install_command_filter.command_should_be_run(dependency, install_command.get_when_to_run_rules()) {
             let downloads_directory = self.directory_finder.get_dependency_downloads_directory(dependency);
             create_dir_all(&downloads_directory).expect("failed to create downloads directory");
 

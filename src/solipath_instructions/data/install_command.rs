@@ -24,8 +24,8 @@ impl InstallCommand {
         &self.platform_filters
     }
 
-    pub fn get_when_to_run_rules(&self) -> HashMap<String, serde_json::Value> {
-        self.when_to_run_rules.clone()
+    pub fn get_when_to_run_rules(&self) -> &HashMap<String, serde_json::Value> {
+        &self.when_to_run_rules
     }
 }
 

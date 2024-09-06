@@ -43,19 +43,19 @@ impl LoopingTemplateRetrieverTrait for LoopingTemplateRetriever {
         instructions_list: Vec<DependencyInstructions>,
     ) -> Vec<DependencyInstructions> {
         let functions = instructions_list
-            .into_iter()
+            .iter()
             .map(|instruction| {
                 let dependency = instruction.get_dependency();
                 instruction
                     .get_templates()
-                    .into_iter()
+                    .iter()
                     .filter(|template| {
                         self.platform_filter
                             .current_platform_is_match(template.get_platform_filters())
                     })
-                    .map(move |template| {
+                    .map(|template| {
                         self.template_retriever
-                            .retrieve_instructions_from_template(dependency.clone(), template)
+                            .retrieve_instructions_from_template(dependency, template)
                     })
             })
             .flatten();

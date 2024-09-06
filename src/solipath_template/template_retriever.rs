@@ -20,8 +20,8 @@ const BASE_DEPENDENCY_URL: &str = "https://raw.githubusercontent.com/Solipath/So
 pub trait TemplateRetrieverTrait {
     async fn retrieve_instructions_from_template(
         &self,
-        dependency: Dependency,
-        template: Template,
+        dependency: &Dependency,
+        template: &Template,
     ) -> DependencyInstructions;
 }
 
@@ -64,11 +64,11 @@ impl TemplateRetriever {
 impl TemplateRetrieverTrait for TemplateRetriever {
     async fn retrieve_instructions_from_template(
         &self,
-        dependency: Dependency,
-        template: Template,
+        dependency: &Dependency,
+        template: &Template,
     ) -> DependencyInstructions {
         let url = self.get_url(&dependency, &template);
-        let output_path = self.get_path_to_save_file(&dependency, &template);
+        let output_path = self.get_path_to_save_file(dependency, template);
         let template_content = self
             .file_downloader
             .download_file_then_parse_to_string(&url, &output_path)
@@ -77,7 +77,7 @@ impl TemplateRetrieverTrait for TemplateRetriever {
             .template_variable_replacer
             .replace_variables(&template_content, &template);
         DependencyInstructions::new(
-            dependency,
+            dependency.clone(),
             serde_json::from_str::<InstallInstructions>(&replaced_template_content).expect("failed to parse template"),
         )
     }
@@ -129,7 +129,7 @@ mod test {
             Arc::new(template_variable_replacer),
         );
         let instructions = template_retriever
-            .retrieve_instructions_from_template(dependency.clone(), template)
+            .retrieve_instructions_from_template(&dependency, &template)
             .await;
         let expected = DependencyInstructions::new(
             dependency,

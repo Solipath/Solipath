@@ -19,20 +19,20 @@ impl DependencyInstructions {
             install_instructions,
         }
     }
-    pub fn get_dependency(&self) -> Dependency {
-        self.dependency.clone()
+    pub fn get_dependency(&self) -> &Dependency {
+        &self.dependency
     }
 
-    pub fn get_environment_variables(&self) -> Vec<EnvironmentVariable> {
+    pub fn get_environment_variables(&self) -> &Vec<EnvironmentVariable> {
         self.install_instructions.get_environment_variables()
     }
-    pub fn get_downloads(&self) -> Vec<DownloadInstruction> {
+    pub fn get_downloads(&self) -> &Vec<DownloadInstruction> {
         self.install_instructions.get_downloads()
     }
-    pub fn get_templates(&self) -> Vec<Template> {
+    pub fn get_templates(&self) -> &Vec<Template> {
         self.install_instructions.get_templates()
     }
-    pub fn get_install_commands(&self) -> Vec<InstallCommand> {
+    pub fn get_install_commands(&self) -> &Vec<InstallCommand> {
         self.install_instructions.get_install_commands()
     }
 }

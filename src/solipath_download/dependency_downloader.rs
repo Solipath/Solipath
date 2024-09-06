@@ -12,7 +12,7 @@ use crate::solipath_instructions::data::download_instruction::DownloadInstructio
 #[cfg_attr(test, automock)]
 #[async_trait]
 pub trait DependencyDownloaderTrait {
-    async fn download_dependency(&self, dependency: Dependency, download_instruction: DownloadInstruction);
+    async fn download_dependency(&self, dependency: &Dependency, download_instruction: &DownloadInstruction);
 }
 
 pub struct DependencyDownloader {
@@ -34,7 +34,7 @@ impl DependencyDownloader {
 
 #[async_trait]
 impl DependencyDownloaderTrait for DependencyDownloader {
-    async fn download_dependency(&self, dependency: Dependency, download_instruction: DownloadInstruction) {
+    async fn download_dependency(&self, dependency: &Dependency, download_instruction: &DownloadInstruction) {
         let mut downloads_directory = self.directory_finder.get_dependency_downloads_directory(&dependency);
         downloads_directory.push(download_instruction.get_destination_directory());
         self.conditional_file_downloader
@@ -76,7 +76,7 @@ mod tests {
         let dependency_downloader =
             DependencyDownloader::new(Arc::new(directory_finder), Arc::new(conditional_file_downloader));
         dependency_downloader
-            .download_dependency(dependency, download_instruction)
+            .download_dependency(&dependency, &download_instruction)
             .await;
     }
 }

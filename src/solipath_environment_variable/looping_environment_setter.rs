@@ -31,12 +31,12 @@ impl LoopingEnvironmentSetter {
     fn set_single_environment_variable(&self, dependency_instructions: DependencyInstructions) {
         dependency_instructions
             .get_environment_variables()
-            .into_iter()
+            .iter()
             .filter(|environment_variable| {
                 self.platform_filter
                     .current_platform_is_match(environment_variable.get_platform_filters())
             })
-            .for_each(move |environment_variable| {
+            .for_each(|environment_variable| {
                 self.environment_setter
                     .set_variable(dependency_instructions.get_dependency(), environment_variable)
             })

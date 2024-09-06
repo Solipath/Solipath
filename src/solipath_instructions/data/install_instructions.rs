@@ -36,19 +36,19 @@ fn default_commands() -> Vec<InstallCommand> {
 }
 
 impl InstallInstructions {
-    pub fn get_downloads(&self) -> Vec<DownloadInstruction> {
-        self.downloads.clone()
+    pub fn get_downloads(&self) -> &Vec<DownloadInstruction> {
+        &self.downloads
     }
 
-    pub fn get_environment_variables(&self) -> Vec<EnvironmentVariable> {
-        self.environment_variables.clone()
+    pub fn get_environment_variables(&self) -> &Vec<EnvironmentVariable> {
+        &self.environment_variables
     }
 
-    pub fn get_templates(&self) -> Vec<Template> {
-        self.templates.clone()
+    pub fn get_templates(&self) -> &Vec<Template> {
+        &self.templates
     }
 
-    pub fn get_install_commands(&self) -> Vec<InstallCommand> {
-        self.install_commands.clone()
+    pub fn get_install_commands(&self) -> &Vec<InstallCommand> {
+        &self.install_commands
     }
 }

@@ -17,7 +17,7 @@ const BASE_DEPENDENCY_URL: &str = "https://raw.githubusercontent.com/Solipath/So
 #[cfg_attr(test, automock)]
 #[async_trait]
 pub trait DependencyInstructionsRetrieverTrait {
-    async fn retrieve_dependency_instructions(&self, depend: Dependency) -> DependencyInstructions;
+    async fn retrieve_dependency_instructions(&self, depend: &Dependency) -> DependencyInstructions;
 }
 
 pub struct DependencyInstructionsRetriever {
@@ -51,9 +51,9 @@ impl DependencyInstructionsRetriever {
 
 #[async_trait]
 impl DependencyInstructionsRetrieverTrait for DependencyInstructionsRetriever {
-    async fn retrieve_dependency_instructions(&self, dependency: Dependency) -> DependencyInstructions {
-        let path_to_save_file = self.get_path_to_save_file(&dependency);
-        let url = self.get_url(&dependency);
+    async fn retrieve_dependency_instructions(&self, dependency: &Dependency) -> DependencyInstructions {
+        let path_to_save_file = self.get_path_to_save_file(dependency);
+        let url = self.get_url(dependency);
         let dependency_json_string = self
             .file_downloader
             .download_file_then_parse_to_string(&url, &path_to_save_file)
@@ -107,7 +107,7 @@ mod test {
         let file_retriever =
             DependencyInstructionsRetriever::new(Arc::new(mock_file_downloader), Arc::new(mock_directory_finder));
 
-        let actual = file_retriever.retrieve_dependency_instructions(input_dependency).await;
+        let actual = file_retriever.retrieve_dependency_instructions(&input_dependency).await;
         assert_eq!(actual, expected);
     }
 }
