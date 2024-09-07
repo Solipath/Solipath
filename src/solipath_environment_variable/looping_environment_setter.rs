@@ -9,7 +9,7 @@ use crate::solipath_platform::platform_filter::PlatformFilterTrait;
 
 #[cfg_attr(test, automock)]
 pub trait LoopingEnvironmentSetterTrait {
-    fn set_environment_variables(&self, dependency_instructions_list: Vec<DependencyInstructions>);
+    fn set_environment_variables(&self, dependency_instructions_list: &Vec<DependencyInstructions>);
 }
 
 pub struct LoopingEnvironmentSetter {
@@ -28,7 +28,7 @@ impl LoopingEnvironmentSetter {
         }
     }
 
-    fn set_single_environment_variable(&self, dependency_instructions: DependencyInstructions) {
+    fn set_single_environment_variable(&self, dependency_instructions: &DependencyInstructions) {
         dependency_instructions
             .get_environment_variables()
             .iter()
@@ -44,7 +44,7 @@ impl LoopingEnvironmentSetter {
 }
 
 impl LoopingEnvironmentSetterTrait for LoopingEnvironmentSetter {
-    fn set_environment_variables(&self, dependency_instructions_list: Vec<DependencyInstructions>) {
+    fn set_environment_variables(&self, dependency_instructions_list: &Vec<DependencyInstructions>) {
         dependency_instructions_list
             .into_iter()
             .for_each(|dependency_instructions| {
@@ -89,7 +89,7 @@ mod tests {
         verify_platform_filter(&mut platform_filter, Vec::new(), true, 1);
         let looping_environment_setter =
             LoopingEnvironmentSetter::new(Arc::new(environment_setter), Arc::new(platform_filter));
-        looping_environment_setter.set_environment_variables(dependency_instructions_list);
+        looping_environment_setter.set_environment_variables(&dependency_instructions_list);
     }
 
     #[test]
@@ -131,7 +131,7 @@ mod tests {
 
         let looping_environment_setter =
             LoopingEnvironmentSetter::new(Arc::new(environment_setter), Arc::new(platform_filter));
-        looping_environment_setter.set_environment_variables(dependency_instructions_list);
+        looping_environment_setter.set_environment_variables(&dependency_instructions_list);
     }
 
     #[test]
@@ -179,7 +179,7 @@ mod tests {
         verify_platform_filter(&mut platform_filter, Vec::new(), true, 3);
         let looping_environment_setter =
             LoopingEnvironmentSetter::new(Arc::new(environment_setter), Arc::new(platform_filter));
-        looping_environment_setter.set_environment_variables(dependency_instructions_list);
+        looping_environment_setter.set_environment_variables(&dependency_instructions_list);
     }
 
     fn verify_environment_setter_called(

@@ -12,7 +12,7 @@ use crate::{
 #[cfg_attr(test, automock)]
 #[async_trait]
 pub trait LoopingDependencyDownloaderTrait {
-    async fn download_dependencies(&self, dependency_instructions_list: Vec<DependencyInstructions>);
+    async fn download_dependencies(&self, dependency_instructions_list: &Vec<DependencyInstructions>);
 }
 
 pub struct LoopingDependencyDownloader {
@@ -34,7 +34,7 @@ impl LoopingDependencyDownloader {
 
 #[async_trait]
 impl LoopingDependencyDownloaderTrait for LoopingDependencyDownloader {
-    async fn download_dependencies(&self, dependency_instructions_list: Vec<DependencyInstructions>) {
+    async fn download_dependencies(&self, dependency_instructions_list: &Vec<DependencyInstructions>) {
         let download_tasks = dependency_instructions_list
             .iter()
             .map(|dependency_instructions| {
@@ -104,7 +104,7 @@ mod tests {
         let looping_dependency_downloader =
             LoopingDependencyDownloader::new(Arc::new(dependency_downloader), Arc::new(platform_filter));
         looping_dependency_downloader
-            .download_dependencies(dependency_instructions_list)
+            .download_dependencies(&dependency_instructions_list)
             .await;
     }
 
@@ -145,7 +145,7 @@ mod tests {
         let looping_dependency_downloader =
             LoopingDependencyDownloader::new(Arc::new(dependency_downloader), Arc::new(platform_filter));
         looping_dependency_downloader
-            .download_dependencies(dependency_instructions_list)
+            .download_dependencies(&dependency_instructions_list)
             .await;
     }
 
@@ -197,7 +197,7 @@ mod tests {
         let looping_dependency_downloader =
             LoopingDependencyDownloader::new(Arc::new(dependency_downloader), Arc::new(platform_filter));
         looping_dependency_downloader
-            .download_dependencies(dependency_instructions_list)
+            .download_dependencies(&dependency_instructions_list)
             .await;
     }
 

@@ -9,7 +9,7 @@ use crate::solipath_platform::platform_filter::PlatformFilterTrait;
 
 #[cfg_attr(test, automock)]
 pub trait LoopingInstallCommandExecutorTrait {
-    fn run_install_commands(&self, dependency_instructions_list: Vec<DependencyInstructions>);
+    fn run_install_commands(&self, dependency_instructions_list: &Vec<DependencyInstructions>);
 }
 
 pub struct LoopingInstallCommandExecutor {
@@ -24,7 +24,7 @@ impl LoopingInstallCommandExecutor {
             Self{install_command_executor, platform_filter}
     }
 
-    fn run_single_install_command(&self, dependency_instructions: DependencyInstructions){
+    fn run_single_install_command(&self, dependency_instructions: &DependencyInstructions){
         let dependency = dependency_instructions.get_dependency();
         dependency_instructions.get_install_commands()
         .iter()
@@ -36,11 +36,11 @@ impl LoopingInstallCommandExecutor {
 }
 
 impl LoopingInstallCommandExecutorTrait for LoopingInstallCommandExecutor {
-    fn run_install_commands(&self, dependency_instructions_list: Vec<DependencyInstructions>){
+    fn run_install_commands(&self, dependency_instructions_list: &Vec<DependencyInstructions>){
         dependency_instructions_list
-            .into_iter()
+            .iter()
             .for_each(|dependency_instructions| {
-                self.run_single_install_command(dependency_instructions);
+                self.run_single_install_command(&dependency_instructions);
             });
     }
 }
@@ -79,7 +79,7 @@ mod tests {
         verify_platform_filter(&mut platform_filter, Vec::new(), true, 1);
         let looping_install_command_executor =
             LoopingInstallCommandExecutor::new(Arc::new(install_command_executor), Arc::new(platform_filter));
-        looping_install_command_executor.run_install_commands(dependency_instructions_list);
+        looping_install_command_executor.run_install_commands(&dependency_instructions_list);
     }
 
 
@@ -111,7 +111,7 @@ mod tests {
         verify_platform_filter(&mut platform_filter, Vec::new(), true, 2);
         let looping_install_command_executor =
             LoopingInstallCommandExecutor::new(Arc::new(install_command_executor), Arc::new(platform_filter));
-        looping_install_command_executor.run_install_commands(dependency_instructions_list);
+        looping_install_command_executor.run_install_commands(&dependency_instructions_list);
     }
 
     #[test]
@@ -148,7 +148,7 @@ mod tests {
         );
         let looping_install_command_executor =
             LoopingInstallCommandExecutor::new(Arc::new(install_command_executor), Arc::new(platform_filter));
-        looping_install_command_executor.run_install_commands(dependency_instructions_list);
+        looping_install_command_executor.run_install_commands(&dependency_instructions_list);
     }
 
 

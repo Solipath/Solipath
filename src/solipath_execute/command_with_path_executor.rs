@@ -103,7 +103,7 @@ impl CommandWithPathExecutor {
     pub async fn set_path_and_execute_command(&self, dependency_list: Vec<Dependency>, commands: &[String]) -> ExitStatus {
         let mut dependency_instructions_list = self
             .dependency_instructions_list_retriever
-            .retrieve_dependency_instructions_list(dependency_list)
+            .retrieve_dependency_instructions_list(&dependency_list)
             .await;
         dependency_instructions_list.append(
             &mut self
@@ -112,13 +112,13 @@ impl CommandWithPathExecutor {
                 .await,
         );
         self.looping_dependency_downloader
-            .download_dependencies(dependency_instructions_list.clone())
+            .download_dependencies(&dependency_instructions_list)
             .await;
         self.looping_environment_setter
-            .set_environment_variables(dependency_instructions_list.clone());
+            .set_environment_variables(&dependency_instructions_list);
         self.looping_install_command_executor
-            .run_install_commands(dependency_instructions_list);
-        self.command_executor.execute_command(commands)
+            .run_install_commands(&dependency_instructions_list);
+        self.command_executor.execute_command(&commands)
     }
 }
 

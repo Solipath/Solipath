@@ -15,7 +15,7 @@ use crate::solipath_platform::platform_filter::{run_functions_matching_platform,
 pub trait LoopingDependencyInstructionsRetrieverTrait {
     async fn retrieve_dependency_instructions_list(
         &self,
-        dependency_list: Vec<Dependency>,
+        dependency_list: &Vec<Dependency>,
     ) -> Vec<DependencyInstructions>;
 }
 
@@ -40,7 +40,7 @@ impl LoopingDependencyInstructionsRetriever {
 impl LoopingDependencyInstructionsRetrieverTrait for LoopingDependencyInstructionsRetriever {
     async fn retrieve_dependency_instructions_list(
         &self,
-        dependency_list: Vec<Dependency>,
+        dependency_list: &Vec<Dependency>,
     ) -> Vec<DependencyInstructions> {
         run_functions_matching_platform(&self.platform_filter, &dependency_list, |dependency| {
             self.dependency_instructions_retriever
@@ -87,7 +87,7 @@ mod tests {
             LoopingDependencyInstructionsRetriever::new(Arc::new(file_retriever), Arc::new(platform_filter));
 
         let actual = list_retriever
-            .retrieve_dependency_instructions_list(dependency_list)
+            .retrieve_dependency_instructions_list(&dependency_list)
             .await;
 
         assert_eq!(actual, expected);
@@ -131,7 +131,7 @@ mod tests {
             LoopingDependencyInstructionsRetriever::new(Arc::new(file_retriever), Arc::new(platform_filter));
 
         let actual = list_retriever
-            .retrieve_dependency_instructions_list(dependency_list)
+            .retrieve_dependency_instructions_list(&dependency_list)
             .await;
 
         assert_eq!(actual, expected);
