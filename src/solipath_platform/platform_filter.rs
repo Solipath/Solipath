@@ -44,7 +44,7 @@ pub trait HasPlatformFilter {
     fn get_platform_filters(&self) -> &[Platform];
 }
 
-pub async fn run_functions_matching_platform<'a, INPUT, FUTURE, RETURN, FUNCTION>(
+pub async fn run_async_functions_matching_platform<'a, INPUT, FUTURE, RETURN, FUNCTION>(
     platform_filter_trait: &Arc<dyn PlatformFilterTrait + Send + Sync>,
     inputs: &'a [INPUT],
     function: FUNCTION,
@@ -59,6 +59,22 @@ where
         .filter(|input| platform_filter_trait.current_platform_is_match(input.get_platform_filters()))
         .map(|input| function(input));
     join_all(async_function_list).await
+}
+
+pub fn run_functions_matching_platform<'a, INPUT, RETURN, FUNCTION>(
+    platform_filter_trait: &Arc<dyn PlatformFilterTrait + Send + Sync>,
+    inputs: &'a [INPUT],
+    function: FUNCTION,
+) -> Vec<RETURN>
+where
+    INPUT: HasPlatformFilter,
+    FUNCTION: Fn(&'a INPUT) -> RETURN,
+{
+    inputs
+        .iter()
+        .filter(|input| platform_filter_trait.current_platform_is_match(input.get_platform_filters()))
+        .map(|input| function(input))
+        .collect()
 }
 
 #[cfg(test)]

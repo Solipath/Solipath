@@ -5,7 +5,7 @@ use mockall::automock;
 
 use crate::solipath_environment_variable::environment_setter::EnvironmentSetterTrait;
 use crate::solipath_instructions::data::dependency_instructions::DependencyInstructions;
-use crate::solipath_platform::platform_filter::PlatformFilterTrait;
+use crate::solipath_platform::platform_filter::{run_functions_matching_platform, PlatformFilterTrait};
 
 #[cfg_attr(test, automock)]
 pub trait LoopingEnvironmentSetterTrait {
@@ -29,18 +29,15 @@ impl LoopingEnvironmentSetter {
     }
 
     fn set_single_environment_variable(&self, dependency_instructions: &DependencyInstructions) {
-        dependency_instructions
-            .get_environment_variables()
-            .iter()
-            .filter(|environment_variable| {
-                self.platform_filter
-                    .current_platform_is_match(environment_variable.get_platform_filters())
-            })
-            .for_each(|environment_variable| {
+        run_functions_matching_platform(
+            &self.platform_filter,
+            dependency_instructions.get_environment_variables(),
+            |environment_variable| {
                 self.environment_setter
                     .set_variable(dependency_instructions.get_dependency(), environment_variable)
-            })
-    } 
+            },
+        );
+    }
 }
 
 impl LoopingEnvironmentSetterTrait for LoopingEnvironmentSetter {

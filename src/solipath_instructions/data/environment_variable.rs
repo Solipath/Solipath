@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::solipath_platform::platform::Platform;
+use crate::solipath_platform::{platform::Platform, platform_filter::HasPlatformFilter};
 
 #[derive(Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct EnvironmentVariable {
@@ -18,7 +18,11 @@ impl EnvironmentVariable {
     pub fn get_relative_path(&self) -> String {
         self.relative_path.clone()
     }
-    pub fn get_platform_filters(&self) -> &[Platform] {
+    
+}
+
+impl HasPlatformFilter for EnvironmentVariable{
+    fn get_platform_filters(&self) -> &[Platform] {
         &self.platform_filters
     }
 }

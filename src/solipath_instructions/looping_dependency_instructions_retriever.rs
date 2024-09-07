@@ -8,7 +8,7 @@ use async_trait::async_trait;
 use crate::solipath_dependency_metadata::dependency::Dependency;
 use crate::solipath_instructions::data::dependency_instructions::DependencyInstructions;
 use crate::solipath_instructions::dependency_instructions_retriever::DependencyInstructionsRetrieverTrait;
-use crate::solipath_platform::platform_filter::{run_functions_matching_platform, PlatformFilterTrait};
+use crate::solipath_platform::platform_filter::{run_async_functions_matching_platform, PlatformFilterTrait};
 
 #[cfg_attr(test, automock)]
 #[async_trait]
@@ -42,7 +42,7 @@ impl LoopingDependencyInstructionsRetrieverTrait for LoopingDependencyInstructio
         &self,
         dependency_list: &Vec<Dependency>,
     ) -> Vec<DependencyInstructions> {
-        run_functions_matching_platform(&self.platform_filter, &dependency_list, |dependency| {
+        run_async_functions_matching_platform(&self.platform_filter, &dependency_list, |dependency| {
             self.dependency_instructions_retriever
                 .retrieve_dependency_instructions(dependency)
         }).await
