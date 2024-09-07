@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::solipath_platform::platform::Platform;
+use crate::solipath_platform::{platform::Platform, platform_filter::HasPlatformFilter};
 
 #[derive(Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct Dependency {
@@ -19,8 +19,10 @@ impl Dependency {
             platform_filters: Vec::new(),
         }
     }
+}
 
-    pub fn get_platform_filters(&self) -> &[Platform] {
+impl HasPlatformFilter for Dependency {
+    fn get_platform_filters(&self) -> &[Platform] {
         &self.platform_filters
     }
 }

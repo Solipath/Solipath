@@ -1,5 +1,8 @@
+use std::future::Future;
 use std::sync::Arc;
 
+use async_trait::async_trait;
+use futures::future::join_all;
 #[cfg(test)]
 use mockall::automock;
 
@@ -7,6 +10,7 @@ use crate::solipath_platform::current_platform_retriever::CurrentPlatformRetriev
 use crate::solipath_platform::platform::Platform;
 
 #[cfg_attr(test, automock)]
+#[async_trait]
 pub trait PlatformFilterTrait {
     fn current_platform_is_match(&self, platform_filter: &[Platform]) -> bool;
 }
@@ -22,7 +26,6 @@ impl PlatformFilter {
         }
     }
 
-    
     fn match_found_in_list(&self, platform_list: &[Platform]) -> bool {
         let current_platform = self.current_platform_retriever.get_current_platform();
         platform_list
@@ -35,6 +38,27 @@ impl PlatformFilterTrait for PlatformFilter {
     fn current_platform_is_match(&self, platform_list: &[Platform]) -> bool {
         platform_list.is_empty() || self.match_found_in_list(platform_list)
     }
+}
+
+pub trait HasPlatformFilter {
+    fn get_platform_filters(&self) -> &[Platform];
+}
+
+pub async fn run_functions_matching_platform<'a, INPUT, FUTURE, RETURN, FUNCTION>(
+    platform_filter_trait: &Arc<dyn PlatformFilterTrait + Send + Sync>,
+    inputs: &'a [INPUT],
+    function: FUNCTION,
+) -> Vec<RETURN>
+where
+    INPUT: HasPlatformFilter,
+    FUTURE: Future<Output = RETURN>,
+    FUNCTION: Fn(&'a INPUT) -> FUTURE,
+{
+    let async_function_list = inputs
+        .iter()
+        .filter(|input| platform_filter_trait.current_platform_is_match(input.get_platform_filters()))
+        .map(|input| function(input));
+    join_all(async_function_list).await
 }
 
 #[cfg(test)]

@@ -6,9 +6,7 @@ use std::sync::Arc;
 use mockall::automock;
 
 use crate::{
-    solipath_instructions::data::dependency_instructions::DependencyInstructions,
-    solipath_platform::platform_filter::PlatformFilterTrait,
-    solipath_download::dependency_downloader::DependencyDownloaderTrait
+    solipath_download::dependency_downloader::DependencyDownloaderTrait, solipath_instructions::data::dependency_instructions::DependencyInstructions, solipath_platform::platform_filter::{HasPlatformFilter, PlatformFilterTrait}
 };
 
 #[cfg_attr(test, automock)]

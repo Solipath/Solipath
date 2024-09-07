@@ -15,7 +15,7 @@ use crate::solipath_template::template_retriever::TemplateRetrieverTrait;
 pub trait LoopingTemplateRetrieverTrait {
     async fn retrieve_instructions_from_templates(
         &self,
-        instructions_list: Vec<DependencyInstructions>,
+        instructions_list: &Vec<DependencyInstructions>,
     ) -> Vec<DependencyInstructions>;
 }
 
@@ -40,7 +40,7 @@ impl LoopingTemplateRetriever {
 impl LoopingTemplateRetrieverTrait for LoopingTemplateRetriever {
     async fn retrieve_instructions_from_templates(
         &self,
-        instructions_list: Vec<DependencyInstructions>,
+        instructions_list: &Vec<DependencyInstructions>,
     ) -> Vec<DependencyInstructions> {
         let functions = instructions_list
             .iter()
@@ -112,7 +112,7 @@ mod test {
             LoopingTemplateRetriever::new(Arc::new(template_retriever), Arc::new(platform_filter));
 
         let actual = looping_template_retriever
-            .retrieve_instructions_from_templates(instructions_list)
+            .retrieve_instructions_from_templates(&instructions_list)
             .await;
         assert_eq!(actual, vec!(output_dependency_instructions.clone()));
     }
@@ -173,7 +173,7 @@ mod test {
             LoopingTemplateRetriever::new(Arc::new(template_retriever), Arc::new(platform_filter));
 
         let actual = looping_template_retriever
-            .retrieve_instructions_from_templates(instructions_list)
+            .retrieve_instructions_from_templates(&instructions_list)
             .await;
         assert_eq!(
             actual,
@@ -246,7 +246,7 @@ mod test {
             LoopingTemplateRetriever::new(Arc::new(template_retriever), Arc::new(platform_filter));
 
         let actual = looping_template_retriever
-            .retrieve_instructions_from_templates(instructions_list)
+            .retrieve_instructions_from_templates(&instructions_list)
             .await;
         assert_eq!(
             actual,
@@ -293,7 +293,7 @@ mod test {
             LoopingTemplateRetriever::new(Arc::new(template_retriever), Arc::new(platform_filter));
 
         let actual = looping_template_retriever
-            .retrieve_instructions_from_templates(instructions_list)
+            .retrieve_instructions_from_templates(&instructions_list)
             .await;
         assert_eq!(actual, vec!(output_dependency_instructions.clone()));
     }

@@ -45,7 +45,7 @@ async fn run_for_path(starting_path: PathBuf){
     let looping_dependency_downloader = LoopingDependencyDownloader::new(dependency_downloader.clone(), unfiltered_platform.clone());
     
     let mut dependency_instructions = install_file_looper.retrieve_all_dependency_instructions(&starting_path);
-    dependency_instructions.append(&mut looping_template_retriever.retrieve_instructions_from_templates(dependency_instructions.clone()).await);
+    dependency_instructions.append(&mut looping_template_retriever.retrieve_instructions_from_templates(&dependency_instructions).await);
     looping_dependency_downloader.download_dependencies(dependency_instructions).await;
     println!("finished running!");
 }

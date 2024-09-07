@@ -108,7 +108,7 @@ impl CommandWithPathExecutor {
         dependency_instructions_list.append(
             &mut self
                 .looping_template_retriever
-                .retrieve_instructions_from_templates(dependency_instructions_list.clone())
+                .retrieve_instructions_from_templates(&dependency_instructions_list)
                 .await,
         );
         self.looping_dependency_downloader

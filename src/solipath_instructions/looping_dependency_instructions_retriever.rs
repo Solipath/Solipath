@@ -4,12 +4,11 @@ use std::sync::Arc;
 use mockall::automock;
 
 use async_trait::async_trait;
-use futures::future::join_all;
 
 use crate::solipath_dependency_metadata::dependency::Dependency;
 use crate::solipath_instructions::data::dependency_instructions::DependencyInstructions;
 use crate::solipath_instructions::dependency_instructions_retriever::DependencyInstructionsRetrieverTrait;
-use crate::solipath_platform::platform_filter::PlatformFilterTrait;
+use crate::solipath_platform::platform_filter::{run_functions_matching_platform, PlatformFilterTrait};
 
 #[cfg_attr(test, automock)]
 #[async_trait]
@@ -43,17 +42,10 @@ impl LoopingDependencyInstructionsRetrieverTrait for LoopingDependencyInstructio
         &self,
         dependency_list: Vec<Dependency>,
     ) -> Vec<DependencyInstructions> {
-        let retrieve_dependency_instruction_tasks = dependency_list
-            .iter()
-            .filter(|dependency| {
-                self.platform_filter
-                    .current_platform_is_match(dependency.get_platform_filters())
-            })
-            .map(|dependency| {
-                self.dependency_instructions_retriever
-                    .retrieve_dependency_instructions(dependency)
-            });
-        join_all(retrieve_dependency_instruction_tasks).await
+        run_functions_matching_platform(&self.platform_filter, &dependency_list, |dependency| {
+            self.dependency_instructions_retriever
+                .retrieve_dependency_instructions(dependency)
+        }).await
     }
 }
 
