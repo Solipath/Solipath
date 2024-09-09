@@ -3,9 +3,12 @@ use std::sync::Arc;
 #[cfg(test)]
 use mockall::automock;
 
-use crate::{solipath_shell::install_command_executor::InstallCommandExecutorTrait, solipath_instructions::data::dependency_instructions::DependencyInstructions};
-use crate::solipath_platform::platform_filter::PlatformFilterTrait;
-
+use crate::solipath_instructions::data::dependency_instructions::VecDependencyInstructions;
+use crate::solipath_platform::platform_filter::{run_functions_matching_platform, PlatformFilterTrait};
+use crate::{
+    solipath_instructions::data::dependency_instructions::DependencyInstructions,
+    solipath_shell::install_command_executor::InstallCommandExecutorTrait,
+};
 
 #[cfg_attr(test, automock)]
 pub trait LoopingInstallCommandExecutorTrait {
@@ -20,44 +23,42 @@ pub struct LoopingInstallCommandExecutor {
 impl LoopingInstallCommandExecutor {
     pub fn new(
         install_command_executor: Arc<dyn InstallCommandExecutorTrait + Send + Sync>,
-        platform_filter: Arc<dyn PlatformFilterTrait + Send + Sync>) -> Self{
-            Self{install_command_executor, platform_filter}
-    }
-
-    fn run_single_install_command(&self, dependency_instructions: &DependencyInstructions){
-        let dependency = dependency_instructions.get_dependency();
-        dependency_instructions.get_install_commands()
-        .iter()
-        .filter(|install_command|self.platform_filter.current_platform_is_match(install_command.get_platform_filters()))
-        .for_each(move |install_command|
-            self.install_command_executor.execute_command(&dependency, &install_command)
-        );
+        platform_filter: Arc<dyn PlatformFilterTrait + Send + Sync>,
+    ) -> Self {
+        Self {
+            install_command_executor,
+            platform_filter,
+        }
     }
 }
 
 impl LoopingInstallCommandExecutorTrait for LoopingInstallCommandExecutor {
-    fn run_install_commands(&self, dependency_instructions_list: &Vec<DependencyInstructions>){
-        dependency_instructions_list
-            .iter()
-            .for_each(|dependency_instructions| {
-                self.run_single_install_command(&dependency_instructions);
-            });
+    fn run_install_commands(&self, dependency_instructions_list: &Vec<DependencyInstructions>) {
+        run_functions_matching_platform(
+            &self.platform_filter,
+            &dependency_instructions_list.get_install_commands(),
+            |(dependency, install_command)| {
+                self.install_command_executor
+                    .execute_command(&dependency, &install_command)
+            },
+        );
     }
 }
-
 
 #[cfg(test)]
 mod tests {
     use mockall::predicate::eq;
 
     use super::*;
-    use crate::{solipath_dependency_metadata::dependency::Dependency, solipath_instructions::data::install_command::InstallCommand, solipath_platform::platform::Platform};
     use crate::solipath_instructions::data::install_instructions::InstallInstructions;
     use crate::solipath_platform::platform_filter::MockPlatformFilterTrait;
     use crate::solipath_shell::install_command_executor::MockInstallCommandExecutorTrait;
+    use crate::{
+        solipath_dependency_metadata::dependency::Dependency,
+        solipath_instructions::data::install_command::InstallCommand, solipath_platform::platform::Platform,
+    };
 
     use crate::solipath_platform::platform_filter::mock::verify_platform_filter;
-
 
     #[test]
     fn can_set_command_executor() {
@@ -81,7 +82,6 @@ mod tests {
             LoopingInstallCommandExecutor::new(Arc::new(install_command_executor), Arc::new(platform_filter));
         looping_install_command_executor.run_install_commands(&dependency_instructions_list);
     }
-
 
     #[test]
     fn can_set_command_executor_loops() {
@@ -150,7 +150,6 @@ mod tests {
             LoopingInstallCommandExecutor::new(Arc::new(install_command_executor), Arc::new(platform_filter));
         looping_install_command_executor.run_install_commands(&dependency_instructions_list);
     }
-
 
     fn verify_install_command_called(
         command_executor: &mut MockInstallCommandExecutorTrait,

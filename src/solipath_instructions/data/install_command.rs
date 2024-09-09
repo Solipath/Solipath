@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::Deserialize;
 
-use crate::solipath_platform::platform::Platform;
+use crate::solipath_platform::{platform::Platform, platform_filter::HasPlatformFilter};
 
 
 #[derive(Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -20,12 +20,14 @@ impl InstallCommand {
         self.command.to_string()
     }
 
-    pub fn get_platform_filters(&self) -> &[Platform] {
-        &self.platform_filters
-    }
-
     pub fn get_when_to_run_rules(&self) -> &HashMap<String, serde_json::Value> {
         &self.when_to_run_rules
+    }
+}
+
+impl HasPlatformFilter for InstallCommand {
+    fn get_platform_filters(&self) -> &[Platform] {
+        &self.platform_filters
     }
 }
 
