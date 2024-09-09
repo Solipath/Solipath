@@ -4,8 +4,10 @@ use std::sync::Arc;
 use mockall::automock;
 
 use crate::solipath_environment_variable::environment_setter::EnvironmentSetterTrait;
-use crate::solipath_instructions::data::dependency_instructions::DependencyInstructions;
-use crate::solipath_platform::platform_filter::{run_functions_matching_platform, PlatformFilterTrait};
+use crate::solipath_instructions::data::dependency_instructions::{DependencyInstructions, VecDependencyInstructions};
+use crate::solipath_platform::platform_filter::{
+    run_functions_matching_platform, PlatformFilterTrait,
+};
 
 #[cfg_attr(test, automock)]
 pub trait LoopingEnvironmentSetterTrait {
@@ -27,26 +29,16 @@ impl LoopingEnvironmentSetter {
             platform_filter,
         }
     }
-
-    fn set_single_environment_variable(&self, dependency_instructions: &DependencyInstructions) {
-        run_functions_matching_platform(
-            &self.platform_filter,
-            dependency_instructions.get_environment_variables(),
-            |environment_variable| {
-                self.environment_setter
-                    .set_variable(dependency_instructions.get_dependency(), environment_variable)
-            },
-        );
-    }
 }
 
 impl LoopingEnvironmentSetterTrait for LoopingEnvironmentSetter {
     fn set_environment_variables(&self, dependency_instructions_list: &Vec<DependencyInstructions>) {
-        dependency_instructions_list
-            .into_iter()
-            .for_each(|dependency_instructions| {
-                self.set_single_environment_variable(dependency_instructions);
-            });
+        run_functions_matching_platform(
+            &self.platform_filter,
+            &dependency_instructions_list.get_environment_variables(),
+            |(dependency, environment_variable)| 
+            self.environment_setter.set_variable(dependency, environment_variable),
+        );
     }
 }
 

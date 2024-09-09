@@ -15,7 +15,6 @@ use mockall::automock;
 pub trait EnvironmentSetterTrait {
     fn set_variable(&self, dependency: &Dependency, environment_variable: &EnvironmentVariable);
 }
-
 pub struct EnvironmentSetter {
     directory_finder: Arc<dyn SolipathDirectoryFinderTrait + Sync + Send>,
 }

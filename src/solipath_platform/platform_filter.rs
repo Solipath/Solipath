@@ -11,8 +11,26 @@ use crate::solipath_platform::platform::Platform;
 
 #[cfg_attr(test, automock)]
 #[async_trait]
-pub trait PlatformFilterTrait {
+pub trait PlatformFilterTrait:Sync+Send{
     fn current_platform_is_match(&self, platform_filter: &[Platform]) -> bool;
+    // TODO: once the "looping" files get refactored away, will try to move this method here
+    // async fn run_async_functions_matching_platform<'a, INPUT, FUTURE, RETURN, FUNCTION>(
+    //     &self,
+    //     inputs: &'a [INPUT],
+    //     function: FUNCTION,
+    // ) -> Vec<RETURN>
+    // where
+    //     INPUT: HasPlatformFilter+Send+Sync,
+    //     RETURN: Send+Sync,
+    //     FUTURE: Future<Output = RETURN>+Send+Sync,
+    //     FUNCTION: Fn(&'a INPUT) -> FUTURE+Send+Sync
+    // {
+    //     let async_function_list = inputs
+    //         .iter()
+    //         .filter(|input| self.current_platform_is_match(input.get_platform_filters()))
+    //         .map(|input| function(input));
+    //     join_all(async_function_list).await
+    // }
 }
 
 pub struct PlatformFilter {
@@ -45,7 +63,7 @@ pub trait HasPlatformFilter {
 }
 
 pub async fn run_async_functions_matching_platform<'a, INPUT, FUTURE, RETURN, FUNCTION>(
-    platform_filter_trait: &Arc<dyn PlatformFilterTrait + Send + Sync>,
+    platform_filter: &Arc<dyn PlatformFilterTrait + Send + Sync>,
     inputs: &'a [INPUT],
     function: FUNCTION,
 ) -> Vec<RETURN>
@@ -56,13 +74,13 @@ where
 {
     let async_function_list = inputs
         .iter()
-        .filter(|input| platform_filter_trait.current_platform_is_match(input.get_platform_filters()))
+        .filter(|input| platform_filter.current_platform_is_match(input.get_platform_filters()))
         .map(|input| function(input));
     join_all(async_function_list).await
 }
 
 pub fn run_functions_matching_platform<'a, INPUT, RETURN, FUNCTION>(
-    platform_filter_trait: &Arc<dyn PlatformFilterTrait + Send + Sync>,
+    platform_filter: &Arc<dyn PlatformFilterTrait + Send + Sync>,
     inputs: &'a [INPUT],
     function: FUNCTION,
 ) -> Vec<RETURN>
@@ -72,7 +90,7 @@ where
 {
     inputs
         .iter()
-        .filter(|input| platform_filter_trait.current_platform_is_match(input.get_platform_filters()))
+        .filter(|input| platform_filter.current_platform_is_match(input.get_platform_filters()))
         .map(|input| function(input))
         .collect()
 }

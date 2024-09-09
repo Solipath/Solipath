@@ -1,12 +1,13 @@
 use async_trait::async_trait;
-use futures::future::join_all;
 use std::sync::Arc;
 
 #[cfg(test)]
 use mockall::automock;
 
 use crate::{
-    solipath_download::dependency_downloader::DependencyDownloaderTrait, solipath_instructions::data::dependency_instructions::DependencyInstructions, solipath_platform::platform_filter::{HasPlatformFilter, PlatformFilterTrait}
+    solipath_download::dependency_downloader::DependencyDownloaderTrait,
+    solipath_instructions::data::dependency_instructions::{DependencyInstructions, VecDependencyInstructions},
+    solipath_platform::platform_filter::{run_async_functions_matching_platform, PlatformFilterTrait},
 };
 
 #[cfg_attr(test, automock)]
@@ -35,23 +36,12 @@ impl LoopingDependencyDownloader {
 #[async_trait]
 impl LoopingDependencyDownloaderTrait for LoopingDependencyDownloader {
     async fn download_dependencies(&self, dependency_instructions_list: &Vec<DependencyInstructions>) {
-        let download_tasks = dependency_instructions_list
-            .iter()
-            .map(|dependency_instructions| {
-                dependency_instructions
-                    .get_downloads()
-                    .iter()
-                    .filter(|download| {
-                        self.platform_filter
-                            .current_platform_is_match(download.get_platform_filters())
-                    })
-                    .map(move |download| {
-                        self.dependency_downloader
-                            .download_dependency(dependency_instructions.get_dependency(), download)
-                    })
-            })
-            .flatten();
-        join_all(download_tasks).await;
+        run_async_functions_matching_platform(
+            &self.platform_filter,
+            &dependency_instructions_list.get_downloads(),
+            |(dependency, download)| self.dependency_downloader.download_dependency(dependency, download),
+        )
+        .await;
     }
 }
 
@@ -59,8 +49,8 @@ impl LoopingDependencyDownloaderTrait for LoopingDependencyDownloader {
 mod tests {
 
     use super::*;
-    use crate::solipath_download::dependency_downloader::MockDependencyDownloaderTrait;
     use crate::solipath_dependency_metadata::dependency::Dependency;
+    use crate::solipath_download::dependency_downloader::MockDependencyDownloaderTrait;
     use crate::solipath_instructions::data::download_instruction::DownloadInstruction;
     use crate::solipath_instructions::data::install_instructions::InstallInstructions;
     use crate::solipath_platform::platform::Platform;

@@ -111,6 +111,7 @@ impl CommandWithPathExecutor {
                 .retrieve_instructions_from_templates(&dependency_instructions_list)
                 .await,
         );
+        
         self.looping_dependency_downloader
             .download_dependencies(&dependency_instructions_list)
             .await;
