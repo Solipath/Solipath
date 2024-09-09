@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use std::collections::HashMap;
 
-use crate::solipath_platform::platform::Platform;
+use crate::solipath_platform::{platform::Platform, platform_filter::HasPlatformFilter};
 
 #[derive(Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct Template {
@@ -13,14 +13,16 @@ pub struct Template {
 }
 
 impl Template {
-    pub fn get_platform_filters(&self) -> &[Platform] {
-        &self.platform_filters
-    }
     pub fn get_variables(&self) -> &HashMap<String, String> {
         &self.variables
     }
     pub fn get_name(&self) -> String {
         self.name.clone()
+    }
+}
+impl HasPlatformFilter for Template {
+    fn get_platform_filters(&self) -> &[Platform] {
+        &self.platform_filters
     }
 }
 

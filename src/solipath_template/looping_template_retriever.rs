@@ -4,10 +4,8 @@ use mockall::automock;
 use async_trait::async_trait;
 use std::sync::Arc;
 
-use futures::future::join_all;
-
-use crate::solipath_instructions::data::dependency_instructions::DependencyInstructions;
-use crate::solipath_platform::platform_filter::PlatformFilterTrait;
+use crate::solipath_instructions::data::dependency_instructions::{DependencyInstructions, VecDependencyInstructions};
+use crate::solipath_platform::platform_filter::{run_async_functions_matching_platform, PlatformFilterTrait};
 use crate::solipath_template::template_retriever::TemplateRetrieverTrait;
 
 #[cfg_attr(test, automock)]
@@ -42,24 +40,13 @@ impl LoopingTemplateRetrieverTrait for LoopingTemplateRetriever {
         &self,
         instructions_list: &Vec<DependencyInstructions>,
     ) -> Vec<DependencyInstructions> {
-        let functions = instructions_list
-            .iter()
-            .map(|instruction| {
-                let dependency = instruction.get_dependency();
-                instruction
-                    .get_templates()
-                    .iter()
-                    .filter(|template| {
-                        self.platform_filter
-                            .current_platform_is_match(template.get_platform_filters())
-                    })
-                    .map(|template| {
-                        self.template_retriever
-                            .retrieve_instructions_from_template(dependency, template)
-                    })
-            })
-            .flatten();
-        join_all(functions).await
+        run_async_functions_matching_platform(
+            &self.platform_filter, 
+            &instructions_list.get_templates(), 
+        |(dependency, template)|{
+            self.template_retriever
+                .retrieve_instructions_from_template(dependency, template)
+        }).await
     }
 }
 

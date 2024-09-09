@@ -42,6 +42,7 @@ pub trait VecDependencyInstructions {
     fn get_environment_variables(&self) -> Vec<(&Dependency, &EnvironmentVariable)>;
     fn get_downloads(&self) -> Vec<(&Dependency, &DownloadInstruction)>;
     fn get_install_commands(&self) -> Vec<(&Dependency, &InstallCommand)>;
+    fn get_templates(&self) -> Vec<(&Dependency, &Template)>;
 }
 
 impl VecDependencyInstructions for Vec<DependencyInstructions> {
@@ -53,6 +54,9 @@ impl VecDependencyInstructions for Vec<DependencyInstructions> {
     }
     fn get_install_commands(&self) -> Vec<(&Dependency, &InstallCommand)> {
         group_dependency_with_field(self, |instructions| instructions.get_install_commands())
+    }
+    fn get_templates(&self) -> Vec<(&Dependency, &Template)> {
+        group_dependency_with_field(self, |instructions| instructions.get_templates())
     }
 }
 
@@ -209,6 +213,45 @@ mod test {
                 )
             ],
             dependency_instructions.get_install_commands()
+        )
+    }
+
+    #[test]
+    fn can_get_aggregated_templates() {
+        let install_instructions_json =
+            r#"{"templates": [
+                {"name": "template1", "variables": {"key1": "value1", "key2": "value2"}},
+                {"name": "template2", "variables": {"key1": "value2", "key2": "value3"}}
+            ]}"#;
+        let install_instructions_json2 =r#"{"templates": [
+                {"name": "template1", "variables": {"key1": "value1", "key2": "value2"}}
+            ]}"#;
+        let dependency_instructions = vec![
+            DependencyInstructions::new(
+                Dependency::new("Dependency1", "1.0"),
+                serde_json::from_str::<InstallInstructions>(install_instructions_json).unwrap(),
+            ),
+            DependencyInstructions::new(
+                Dependency::new("Dependency2", "2.0"),
+                serde_json::from_str::<InstallInstructions>(install_instructions_json2).unwrap(),
+            ),
+        ];
+        assert_eq!(
+            vec![
+                (
+                    dependency_instructions[0].get_dependency(),
+                    &dependency_instructions[0].get_templates()[0]
+                ),
+                (
+                    dependency_instructions[0].get_dependency(),
+                    &dependency_instructions[0].get_templates()[1]
+                ),
+                (
+                    dependency_instructions[1].get_dependency(),
+                    &dependency_instructions[1].get_templates()[0]
+                )
+            ],
+            dependency_instructions.get_templates()
         )
     }
 }
