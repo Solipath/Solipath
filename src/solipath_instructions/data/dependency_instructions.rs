@@ -46,38 +46,31 @@ pub trait VecDependencyInstructions {
 
 impl VecDependencyInstructions for Vec<DependencyInstructions> {
     fn get_environment_variables(&self) -> Vec<(&Dependency, &EnvironmentVariable)> {
-        self.iter()
-            .map(|instructions| {
-                instructions
-                    .get_environment_variables()
-                    .iter()
-                    .map(|environment_variable| (instructions.get_dependency(), environment_variable))
-            })
-            .flatten()
-            .collect()
+        group_dependency_with_field(self, |instructions| instructions.get_environment_variables())
     }
     fn get_downloads(&self) -> Vec<(&Dependency, &DownloadInstruction)> {
-        self.iter()
-            .map(|instructions| {
-                instructions
-                    .get_downloads()
-                    .iter()
-                    .map(|download| (instructions.get_dependency(), download))
-            })
-            .flatten()
-            .collect()
+        group_dependency_with_field(self, |instructions| instructions.get_downloads())
     }
     fn get_install_commands(&self) -> Vec<(&Dependency, &InstallCommand)> {
-        self.iter()
-            .map(|instructions| {
-                instructions
-                    .get_install_commands()
-                    .iter()
-                    .map(|download| (instructions.get_dependency(), download))
-            })
-            .flatten()
-            .collect()
+        group_dependency_with_field(self, |instructions| instructions.get_install_commands())
     }
+}
+
+fn group_dependency_with_field<'a, FUNCTION, FIELD>(
+    list: &'a Vec<DependencyInstructions>,
+    get_function: FUNCTION,
+) -> Vec<(&'a Dependency, &'a FIELD)>
+where
+    FUNCTION: Fn(&'a DependencyInstructions) -> &'a Vec<FIELD>,
+{
+    list.iter()
+        .map(|instructions| {
+            get_function(instructions)
+                .iter()
+                .map(|environment_variable| (instructions.get_dependency(), environment_variable))
+        })
+        .flatten()
+        .collect()
 }
 
 impl<T> HasPlatformFilter for (&Dependency, &T)
