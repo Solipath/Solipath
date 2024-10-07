@@ -43,7 +43,7 @@ impl InstallCommandExecutorTrait for InstallCommandExecutor {
 
 fn switch_to_download_directory_command(downloads_directory: &PathBuf)-> String {
     if std::env::consts::OS == "windows" {
-        format!("cd /d \"{}\"", downloads_directory.display())
+        format!("cd /d {}", downloads_directory.to_str().unwrap())
     } else {
         format!("cd \"{}\"", downloads_directory.display())
     }

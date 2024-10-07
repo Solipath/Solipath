@@ -254,12 +254,13 @@ mod test {
     }
 
     fn prefix_change_directory_command(directory: &PathBuf, command: &str) -> String {
-        let change_directory_flag = if std::env::consts::OS == "windows" { "/d" } else { "" };
-        let mut expected_path_string = directory.display().to_string();
-        if std::env::consts::OS == "windows" {
-            expected_path_string = expected_path_string.replace("/", "\\");
-        }
-        format!("cd {} \"{}\" && {}", change_directory_flag, expected_path_string, command)
+        let change_directory_command = if std::env::consts::OS == "windows" {
+            let expected_path_string = directory.to_str().unwrap().replace("/", "\\");
+            format!("cd /d {}", expected_path_string)
+        } else {
+            format!("cd \"{}\"", directory.display())
+        };
+        format!("{} && {}", change_directory_command, command)
     }
 
     fn assert_environment_contains(environment_name: &str, path_value: &PathBuf) {
