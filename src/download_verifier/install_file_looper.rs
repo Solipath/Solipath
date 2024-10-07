@@ -1,8 +1,8 @@
 use glob::glob;
+use solipath_lib::solipath_instructions::data::dependency::Dependency;
 use std::path::Path;
 use solipath_lib::solipath_instructions::data::dependency_instructions::DependencyInstructions;
 use solipath_lib::solipath_instructions::data::install_instructions::InstallInstructions;
-use solipath_lib::solipath_dependency_metadata::dependency::Dependency;
 use std::fs::read_to_string;
 pub struct InstallFileLooper;
 

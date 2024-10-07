@@ -5,15 +5,13 @@ use async_trait::async_trait;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use crate::solipath_dependency_metadata::dependency::Dependency;
+use crate::solipath_instructions::data::dependency::Dependency;
 use crate::solipath_directory::solipath_directory_finder::SolipathDirectoryFinderTrait;
 use crate::solipath_download::file_to_string_downloader::FileToStringDownloaderTrait;
 use crate::solipath_instructions::data::dependency_instructions::DependencyInstructions;
 use crate::solipath_instructions::data::install_instructions::InstallInstructions;
 use crate::solipath_instructions::data::template::Template;
 use crate::solipath_template::template_variable_replacer::TemplateVariableReplacerTrait;
-
-const BASE_DEPENDENCY_URL: &str = "https://raw.githubusercontent.com/Solipath/Solipath-Install-Instructions/main";
 
 #[cfg_attr(test, automock)]
 #[async_trait]
@@ -26,6 +24,7 @@ pub trait TemplateRetrieverTrait {
 }
 
 pub struct TemplateRetriever {
+    base_dependency_url: String,
     file_downloader: Arc<dyn FileToStringDownloaderTrait + Sync + Send>,
     directory_finder: Arc<dyn SolipathDirectoryFinderTrait + Sync + Send>,
     template_variable_replacer: Arc<dyn TemplateVariableReplacerTrait + Sync + Send>,
@@ -38,6 +37,20 @@ impl TemplateRetriever {
         template_variable_replacer: Arc<dyn TemplateVariableReplacerTrait + Sync + Send>,
     ) -> Self {
         Self {
+            base_dependency_url: "https://raw.githubusercontent.com/Solipath/Solipath-Install-Instructions/main".to_string(),
+            file_downloader,
+            directory_finder,
+            template_variable_replacer,
+        }
+    }
+    pub fn new_with_alternate_url(
+        base_dependency_url: String,
+        file_downloader: Arc<dyn FileToStringDownloaderTrait + Sync + Send>,
+        directory_finder: Arc<dyn SolipathDirectoryFinderTrait + Sync + Send>,
+        template_variable_replacer: Arc<dyn TemplateVariableReplacerTrait + Sync + Send>,
+    ) -> Self {
+        Self {
+            base_dependency_url,
             file_downloader,
             directory_finder,
             template_variable_replacer,
@@ -53,7 +66,7 @@ impl TemplateRetriever {
     fn get_url(&self, dependency: &Dependency, template: &Template) -> String {
         format!(
             "{}/{}/templates/{}.json",
-            BASE_DEPENDENCY_URL,
+            &self.base_dependency_url,
             dependency.name,
             template.get_name()
         )

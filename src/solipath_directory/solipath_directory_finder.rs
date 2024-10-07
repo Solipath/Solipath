@@ -2,7 +2,8 @@ use std::path::PathBuf;
 
 use dirs_next::home_dir;
 
-use crate::solipath_dependency_metadata::dependency::Dependency;
+use crate::solipath_instructions::data::dependency::Dependency;
+
 #[cfg(test)]
 use mockall::automock;
 

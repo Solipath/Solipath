@@ -2,8 +2,8 @@
 use mockall::automock;
 
 use std::{collections::HashMap, sync::Arc};
-
-use crate::{solipath_dependency_metadata::dependency::Dependency, solipath_directory::solipath_directory_finder::SolipathDirectoryFinderTrait};
+use crate::solipath_instructions::data::dependency::Dependency;
+use crate::solipath_directory::solipath_directory_finder::SolipathDirectoryFinderTrait;
 
 #[cfg_attr(test, automock)]
 pub trait InstallCommandFilterTrait{
@@ -47,7 +47,7 @@ mod tests{
     use tempfile::tempdir;
 
     use super::*;
-    use crate::{solipath_dependency_metadata::dependency::Dependency, solipath_directory::solipath_directory_finder::MockSolipathDirectoryFinderTrait};
+    use crate::solipath_directory::solipath_directory_finder::MockSolipathDirectoryFinderTrait;
 
     #[test]
     fn filter_commands_no_rules_returns_true() {

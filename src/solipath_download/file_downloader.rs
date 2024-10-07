@@ -54,9 +54,6 @@ impl FileDownloader {
                     .await.and_then(|response| response.error_for_status())
     }
 
-    
-
-
     async fn stream_response_output_to_file(&self, response: &mut Response, file: &mut File) {
         while let Some(chunk) = response.chunk().await.expect("file download failed!") {
             file.write_all(&chunk)
@@ -65,6 +62,7 @@ impl FileDownloader {
         }
     }
 }
+
 
 #[async_trait]
 impl FileDownloaderTrait for FileDownloader {

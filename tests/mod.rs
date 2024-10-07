@@ -4,12 +4,13 @@ use std::process::ExitStatus;
 use std::process::Stdio;
 use std::sync::Arc;
 use std::sync::Mutex;
+use solipath_lib::solipath_execute::command_with_path_executor::CommandWithPathExecutor;
+use solipath_lib::solipath_instructions::data::dependency::Dependency;
+use solipath_lib::solipath_platform::current_platform_retriever::CurrentPlatformRetriever;
 use tempfile::tempdir;
 
 use solipath_lib::solipath_shell::command_executor::CommandExecutorTrait;
-use solipath_lib::solipath_dependency_metadata::dependency::Dependency;
 use solipath_lib::solipath_directory::solipath_directory_finder::SolipathDirectoryFinderTrait;
-use solipath_lib::solipath_execute::command_with_path_executor::CommandWithPathExecutor;
 
 //tests in this file are integration tests that pull down a couple hundred megabytes of data.
 //I don't want to run these every time. These can be run with "cargo test -- --features=expensive_tests"
@@ -20,7 +21,12 @@ async fn install_node_integration_test() {
     let command_executor = Arc::new(IntegrationTestCommandExecutor::new());
 
     let command_with_path_executor =
-        CommandWithPathExecutor::new_with_directory_finder(Arc::new(directory_finder), command_executor.clone());
+        CommandWithPathExecutor::new_with_injected_values(
+            "https://raw.githubusercontent.com/Solipath/Solipath-Install-Instructions/main".to_string(),
+            Arc::new(directory_finder), 
+            Arc::new(CurrentPlatformRetriever::new()),
+            command_executor.clone()
+        );
     let arguments = vec!["node".to_string(), "--version".to_string()];
     let dependency_list = vec![Dependency::new("node", "15")];
     let exit_status = command_with_path_executor
@@ -40,7 +46,12 @@ async fn install_java_integration_test() {
     let command_executor = Arc::new(IntegrationTestCommandExecutor::new());
 
     let command_with_path_executor =
-        CommandWithPathExecutor::new_with_directory_finder(Arc::new(directory_finder), command_executor.clone());
+        CommandWithPathExecutor::new_with_injected_values(
+            "https://raw.githubusercontent.com/Solipath/Solipath-Install-Instructions/main".to_string(),
+            Arc::new(directory_finder), 
+            Arc::new(CurrentPlatformRetriever::new()),
+            command_executor.clone()
+        );
     let arguments = vec!["java".to_string(), "--version".to_string()];
     let dependency_list = vec![Dependency::new("java", "17")];
     let exit_status = command_with_path_executor

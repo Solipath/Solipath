@@ -1,95 +1,35 @@
 use std::{process::ExitStatus, sync::Arc};
 
-use crate::solipath_shell::{command_executor::CommandExecutor, install_command_executor::InstallCommandExecutor, install_command_filter::InstallCommandFilter, looping_install_command_executor::{LoopingInstallCommandExecutor, LoopingInstallCommandExecutorTrait}};
-use crate::solipath_shell::command_executor::CommandExecutorTrait;
-use crate::solipath_download::dependency_downloader::DependencyDownloader;
-use crate::solipath_download::looping_dependency_downloader::LoopingDependencyDownloader;
-use crate::solipath_download::looping_dependency_downloader::LoopingDependencyDownloaderTrait;
-use crate::solipath_directory::solipath_directory_finder::SolipathDirectoryFinder;
-use crate::solipath_directory::solipath_directory_finder::SolipathDirectoryFinderTrait;
-use crate::solipath_download::conditional_file_downloader::ConditionalFileDownloader;
-use crate::solipath_download::file_decompressor::FileDecompressor;
-use crate::solipath_download::file_downloader::FileDownloader;
-use crate::solipath_download::file_to_string_downloader::FileToStringDownloader;
-use crate::solipath_environment_variable::environment_setter::EnvironmentSetter;
-use crate::solipath_environment_variable::looping_environment_setter::LoopingEnvironmentSetter;
-use crate::solipath_environment_variable::looping_environment_setter::LoopingEnvironmentSetterTrait;
-use crate::solipath_instructions::dependency_instructions_retriever::DependencyInstructionsRetriever;
-use crate::solipath_instructions::looping_dependency_instructions_retriever::LoopingDependencyInstructionsRetriever;
-use crate::solipath_instructions::looping_dependency_instructions_retriever::LoopingDependencyInstructionsRetrieverTrait;
-use crate::solipath_template::looping_template_retriever::LoopingTemplateRetriever;
-use crate::solipath_template::looping_template_retriever::LoopingTemplateRetrieverTrait;
-use crate::solipath_template::template_retriever::TemplateRetriever;
-use crate::solipath_template::template_variable_replacer::TemplateVariableReplacer;
+use crate::solipath_instructions::data::dependency::Dependency;
 use crate::{
-    solipath_dependency_metadata::dependency::Dependency,
-    solipath_platform::{current_platform_retriever::CurrentPlatformRetriever, platform_filter::PlatformFilter},
+    async_loop::run_async, solipath_directory::solipath_directory_finder::{SolipathDirectoryFinder, SolipathDirectoryFinderTrait}, solipath_download::{conditional_file_downloader::ConditionalFileDownloader, dependency_downloader::{DependencyDownloader, DependencyDownloaderTrait}, file_decompressor::FileDecompressor, file_downloader::FileDownloader, file_to_string_downloader::FileToStringDownloader}, solipath_environment_variable::environment_setter::{EnvironmentSetter, EnvironmentSetterTrait}, solipath_instructions::{
+        data::dependency_instructions::{DependencyInstructions, VecDependencyInstructions},
+        dependency_instructions_retriever::{DependencyInstructionsRetriever, DependencyInstructionsRetrieverTrait},
+    }, solipath_platform::{current_platform_retriever::{CurrentPlatformRetriever, CurrentPlatformRetrieverTrait}, platform_filter::{filter_list, PlatformFilter, PlatformFilterTrait}}, solipath_shell::{command_executor::{CommandExecutor, CommandExecutorTrait}, install_command_executor::{InstallCommandExecutor, InstallCommandExecutorTrait}, install_command_filter::InstallCommandFilter}, solipath_template::{template_retriever::{TemplateRetriever, TemplateRetrieverTrait}, template_variable_replacer::TemplateVariableReplacer}
 };
 
 pub struct CommandWithPathExecutor {
-    dependency_instructions_list_retriever: Arc<dyn LoopingDependencyInstructionsRetrieverTrait + Sync + Send>,
-    looping_template_retriever: Arc<dyn LoopingTemplateRetrieverTrait + Sync + Send>,
-    looping_dependency_downloader: Arc<dyn LoopingDependencyDownloaderTrait + Sync + Send>,
-    looping_environment_setter: Arc<dyn LoopingEnvironmentSetterTrait + Sync + Send>,
-    looping_install_command_executor: Arc<dyn LoopingInstallCommandExecutorTrait + Sync + Send>,
-    command_executor: Arc<dyn CommandExecutorTrait + Sync + Send>,
+    platform_filter: Arc<dyn PlatformFilterTrait>,
+    dependency_instructions_retriever: Arc<dyn DependencyInstructionsRetrieverTrait>,
+    template_retriever: Arc<dyn TemplateRetrieverTrait>,
+    dependency_downloader: Arc<dyn DependencyDownloaderTrait>,
+    environment_setter: Arc<dyn EnvironmentSetterTrait>,
+    install_command_executor: Arc<dyn InstallCommandExecutorTrait>,
+    command_executor: Arc<dyn CommandExecutorTrait>,
 }
 
 impl CommandWithPathExecutor {
-    pub fn new() -> Self {
+
+    pub fn new()-> Self {
+        let base_solipath_url = "https://raw.githubusercontent.com/Solipath/Solipath-Install-Instructions/main".to_string();
         let directory_finder = Arc::new(SolipathDirectoryFinder::new());
+        let platform_retriever = Arc::new(CurrentPlatformRetriever::new());
         let command_executor = Arc::new(CommandExecutor::new());
-        CommandWithPathExecutor::new_with_directory_finder(directory_finder, command_executor)
-    }
-    pub fn new_with_directory_finder(
-        directory_finder: Arc<dyn SolipathDirectoryFinderTrait + Sync + Send>,
-        command_executor: Arc<dyn CommandExecutorTrait + Sync + Send>,
-    ) -> Self {
-        let file_downloader = Arc::new(FileDownloader::new());
-        let file_decompressor = Arc::new(FileDecompressor::new());
-        let conditional_file_downloader = Arc::new(ConditionalFileDownloader::new(file_downloader, file_decompressor));
-        let file_to_string_downloader = Arc::new(FileToStringDownloader::new(conditional_file_downloader.clone()));
-        let current_platform_retriever = Arc::new(CurrentPlatformRetriever::new());
-        let platform_filter = Arc::new(PlatformFilter::new(current_platform_retriever));
-        let template_variable_replacer = Arc::new(TemplateVariableReplacer::new());
-        let template_retriever = Arc::new(TemplateRetriever::new(
-            file_to_string_downloader.clone(),
-            directory_finder.clone(),
-            template_variable_replacer,
-        ));
-        let looping_template_retriever = Arc::new(LoopingTemplateRetriever::new(
-            template_retriever,
-            platform_filter.clone(),
-        ));
-        let dependency_instructions_retriever = Arc::new(DependencyInstructionsRetriever::new(
-            file_to_string_downloader,
-            directory_finder.clone(),
-        ));
-        let looping_dependency_instructions_retriever = Arc::new(LoopingDependencyInstructionsRetriever::new(
-            dependency_instructions_retriever,
-            platform_filter.clone(),
-        ));
-        let dependency_downloader = Arc::new(DependencyDownloader::new(
-            directory_finder.clone(),
-            conditional_file_downloader,
-        ));
-        let looping_dependency_downloader = Arc::new(LoopingDependencyDownloader::new(
-            dependency_downloader,
-            platform_filter.clone(),
-        ));
-        let environment_setter = Arc::new(EnvironmentSetter::new(directory_finder.clone()));
-        let looping_environment_setter = Arc::new(LoopingEnvironmentSetter::new(environment_setter, platform_filter.clone()));
-        let install_command_filter = Arc::new(InstallCommandFilter::new(directory_finder.clone()));
-        let install_command_executor = Arc::new(InstallCommandExecutor::new(command_executor.clone(), install_command_filter, directory_finder));
-        let looping_install_command_executor = Arc::new(LoopingInstallCommandExecutor::new(install_command_executor, platform_filter));
-        Self {
-            dependency_instructions_list_retriever: looping_dependency_instructions_retriever,
-            looping_template_retriever,
-            looping_dependency_downloader,
-            looping_environment_setter,
-            looping_install_command_executor,
-            command_executor,
-        }
+        Self::new_with_injected_values(
+            base_solipath_url, 
+            directory_finder, 
+            platform_retriever, 
+            command_executor)
     }
 
     pub async fn set_path_from_solipath_file_and_execute_command(&self, commands: &[String]) -> ExitStatus {
@@ -100,101 +40,214 @@ impl CommandWithPathExecutor {
         self.set_path_and_execute_command(dependency_list, commands).await
     }
 
+    pub fn new_with_injected_values(
+        base_solipath_url: String,
+        directory_finder: Arc<dyn SolipathDirectoryFinderTrait + Send + Sync>,
+        platform_retriever: Arc<dyn CurrentPlatformRetrieverTrait + Send + Sync>,
+        command_executor: Arc<dyn CommandExecutorTrait + Send + Sync>,
+    )-> Self{
+        let file_downloader = Arc::new(FileDownloader::new());
+        let file_decompressor = Arc::new(FileDecompressor::new());
+        let conditional_file_downloader =
+            Arc::new(ConditionalFileDownloader::new(file_downloader, file_decompressor));
+        let file_to_string_downloader = Arc::new(FileToStringDownloader::new(conditional_file_downloader.clone()));
+        let dependency_instructions_retriever = Arc::new(DependencyInstructionsRetriever::new_with_alternate_url(
+            base_solipath_url.clone(),
+            file_to_string_downloader.clone(),
+            directory_finder.clone(),
+        ));
+        let template_retriever = Arc::new(TemplateRetriever::new_with_alternate_url(
+            base_solipath_url,
+            file_to_string_downloader,
+            directory_finder.clone(),
+            Arc::new(TemplateVariableReplacer::new()),
+        ));
+        let platform_filter = Arc::new(PlatformFilter::new(platform_retriever));
+        let dependency_downloader = Arc::new(DependencyDownloader::new(
+            directory_finder.clone(),
+            conditional_file_downloader,
+        ));
+
+        let environment_setter = Arc::new(EnvironmentSetter::new(directory_finder.clone()));
+
+        let install_command_filter = Arc::new(InstallCommandFilter::new(directory_finder.clone()));
+        let install_command_executor = Arc::new(InstallCommandExecutor::new(
+            command_executor.clone(),
+            install_command_filter,
+            directory_finder,
+        ));
+
+        CommandWithPathExecutor {
+            platform_filter,
+            dependency_instructions_retriever,
+            template_retriever,
+            dependency_downloader,
+            environment_setter,
+            install_command_executor,
+            command_executor,
+        }
+    }
+
+    async fn get_dependency_instructions(&self, dependency_list: &Vec<Dependency>) -> Vec<DependencyInstructions> {
+        let dependency_list = filter_list(&self.platform_filter, &dependency_list);
+        let mut dependency_instructions = run_async(&dependency_list, |dependency| {
+            self.dependency_instructions_retriever
+                .retrieve_dependency_instructions(dependency)
+        })
+        .await
+        .filter_platform(&self.platform_filter);
+        let mut template_instructions =
+            run_async(&dependency_instructions.get_templates(), |(dependency, template)| {
+                self.template_retriever
+                    .retrieve_instructions_from_template(dependency, template)
+            })
+            .await
+            .filter_platform(&self.platform_filter);
+        dependency_instructions.append(&mut template_instructions);
+        dependency_instructions
+    }
+
     pub async fn set_path_and_execute_command(&self, dependency_list: Vec<Dependency>, commands: &[String]) -> ExitStatus {
-        let mut dependency_instructions_list = self
-            .dependency_instructions_list_retriever
-            .retrieve_dependency_instructions_list(&dependency_list)
-            .await;
-        dependency_instructions_list.append(
-            &mut self
-                .looping_template_retriever
-                .retrieve_instructions_from_templates(&dependency_instructions_list)
-                .await,
-        );
-        
-        self.looping_dependency_downloader
-            .download_dependencies(&dependency_instructions_list)
-            .await;
-        self.looping_environment_setter
-            .set_environment_variables(&dependency_instructions_list);
-        self.looping_install_command_executor
-            .run_install_commands(&dependency_instructions_list);
-        self.command_executor.execute_command(&commands)
+        let dependency_instructions = self.get_dependency_instructions(&dependency_list).await;
+
+        run_async(
+            &dependency_instructions.get_downloads(),
+            |(dependency, download_instruction)| {
+                self.dependency_downloader
+                    .download_dependency(dependency, download_instruction)
+            },
+        )
+        .await;
+
+        dependency_instructions
+            .get_environment_variables()
+            .iter()
+            .for_each(|(dependency, environment_variable)| {
+                self.environment_setter.set_variable(dependency, environment_variable)
+            });
+        dependency_instructions
+            .get_install_commands()
+            .iter()
+            .for_each(|(dependency, install_command)| {
+                self.install_command_executor
+                    .execute_command(dependency, install_command);
+            });
+        self.command_executor.execute_command(commands)
     }
 }
 
+
+
 #[cfg(test)]
-mod tests {
+mod test {
+    use std::{
+        env::{self, VarError},
+        fs::{read_dir, read_to_string},
+        path::PathBuf, process::ExitStatus,
+    };
+
+    use tempfile::tempdir;
+    use tokio::task::JoinHandle;
+    use warp::Filter;
+
+    use crate::{
+        path_buf_ext::PathBufExt,
+        solipath_directory::moveable_home_directory_finder::MoveableHomeDirectoryFinder,
+        solipath_platform::{
+            platform::Platform,
+            platform_filter::mock::FakeCurrentPlatformRetriever,
+        },
+        solipath_shell::command_executor::pub_test::MockCommandExecutor
+    };
+
     use super::*;
-    use crate::solipath_shell::command_executor::MockCommandExecutorTrait;
-    use crate::solipath_shell::looping_install_command_executor::MockLoopingInstallCommandExecutorTrait;
-    use crate::solipath_download::looping_dependency_downloader::MockLoopingDependencyDownloaderTrait;
-    use crate::solipath_environment_variable::looping_environment_setter::MockLoopingEnvironmentSetterTrait;
-    use crate::solipath_instructions::data::dependency_instructions::DependencyInstructions;
-    use crate::solipath_instructions::data::install_instructions::InstallInstructions;
-    use crate::solipath_instructions::looping_dependency_instructions_retriever::MockLoopingDependencyInstructionsRetrieverTrait;
-    use crate::solipath_template::looping_template_retriever::MockLoopingTemplateRetrieverTrait;
-    use mockall::predicate::*;
+
+    impl CommandWithPathExecutor {
+        fn new_test(
+            output_path: &PathBuf,
+            base_solipath_url: String,
+            command_executor: Arc<dyn CommandExecutorTrait + Send + Sync>,
+        ) -> Self {
+            let directory_finder = Arc::new(MoveableHomeDirectoryFinder::new(output_path.clone()));
+            let platform_retriever = Arc::new(FakeCurrentPlatformRetriever {
+                platform: Platform::new("Matching OS", "Matching Arch"),
+            });
+            CommandWithPathExecutor::new_with_injected_values(
+                base_solipath_url,
+                directory_finder,
+                platform_retriever,
+                command_executor
+            )
+
+        }
+    }
 
     #[tokio::test]
-    async fn get_dependency_instructions_downloads_dependencies_sets_environment_variables_then_executes_the_command() {
-        let dependency = Dependency::new("java", "11");
-        let dependency2 = Dependency::new("node", "12");
-        let dependency_list = vec![dependency.clone()];
-        let instructions = serde_json::from_str::<InstallInstructions>(
-            r#"
-            {"downloads": [
-                {"url": "www.github.com/node15.zip", "destination_directory": "node15Folder"}
-            ]}"#,
-        )
-        .unwrap();
-        let dependency_instructions = vec![DependencyInstructions::new(dependency.clone(), instructions.clone())];
-        let dependency_instructions2 = vec![DependencyInstructions::new(dependency2.clone(), instructions.clone())];
-        let mut combined_instructions = Vec::new();
-        combined_instructions.extend(dependency_instructions.iter().cloned());
-        combined_instructions.extend(dependency_instructions2.iter().cloned());
-        let commands = vec!["command1".to_string(), "argument1".to_string()];
-        let mut dependency_instructions_list_retriever = MockLoopingDependencyInstructionsRetrieverTrait::new();
-        dependency_instructions_list_retriever
-            .expect_retrieve_dependency_instructions_list()
-            .with(eq(dependency_list.clone()))
-            .return_const(dependency_instructions.clone());
-        let mut looping_template_retriever = MockLoopingTemplateRetrieverTrait::new();
-        looping_template_retriever
-            .expect_retrieve_instructions_from_templates()
-            .with(eq(dependency_instructions.clone()))
-            .return_const(dependency_instructions2);
-        let mut looping_dependency_downloader = MockLoopingDependencyDownloaderTrait::new();
-        looping_dependency_downloader
-            .expect_download_dependencies()
-            .with(eq(combined_instructions.clone()))
-            .return_const(());
-        let mut looping_environment_setter = MockLoopingEnvironmentSetterTrait::new();
-        looping_environment_setter
-            .expect_set_environment_variables()
-            .with(eq(combined_instructions.clone()))
-            .return_const(());
-        let mut looping_command_executor = MockLoopingInstallCommandExecutorTrait::new();
-        looping_command_executor
-            .expect_run_install_commands()
-            .with(eq(combined_instructions.clone()))
-            .return_const(());
+    async fn test_broad_functionality_using_local_file_hosting() {
+        let mock_command_executor = Arc::new(MockCommandExecutor::new());
 
-        let mut command_executor = MockCommandExecutorTrait::new();
-        command_executor
-            .expect_execute_command()
-            .withf(|actual| actual == vec!["command1".to_string(), "argument1".to_string()])
-            .return_const(ExitStatus::default());
-        let command_with_path_executor = CommandWithPathExecutor {
-            dependency_instructions_list_retriever: Arc::new(dependency_instructions_list_retriever),
-            looping_template_retriever: Arc::new(looping_template_retriever),
-            looping_dependency_downloader: Arc::new(looping_dependency_downloader),
-            looping_environment_setter: Arc::new(looping_environment_setter),
-            looping_install_command_executor: Arc::new(looping_command_executor),
-            command_executor: Arc::new(command_executor),
-        };
-        command_with_path_executor
-            .set_path_and_execute_command(dependency_list, &commands)
+        let output_tempdir = tempdir().unwrap();
+        let output_path = output_tempdir.path().to_path_buf();
+        let solipath_source =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).clone_push("tests/resources/test_solipath_with_local_downloads");
+        let downloads_directory = PathBuf::from(env!("CARGO_MANIFEST_DIR")).clone_push("tests/resources");
+        let base_solipath_url = "http://127.0.0.1:53123/solipath".to_string();
+        let command_with_path_executor =
+            CommandWithPathExecutor::new_test(&output_path, base_solipath_url, mock_command_executor.clone());
+        let dependencies = serde_json::from_str::<Vec<Dependency>>(r#"
+        [
+            {"name": "PerfectMatchDependency", "version": "1.0.1", "platform_filters": [{"os": "Matching OS", "arch": "Matching Arch"}]},
+            {"name": "BadMatchDependency", "version": "2.0.1", "platform_filters": [{"os": "a bad match", "arch": "x86"}]},
+            {"name": "BadArchDependency", "version": "3.0.1", "platform_filters": [{"os": "Matching OS", "arch": "Bad Arch"}]}
+        ]"#).unwrap();
+
+
+        let file_server = start_file_server(&solipath_source, &downloads_directory);
+        let exit_status = command_with_path_executor
+            .set_path_and_execute_command(dependencies, &["command to run".to_string()])
             .await;
+        file_server.abort();
+
+
+        let expected_download_folder = output_path.clone_push("PerfectMatchDependency/downloads/result");
+        assert_eq!(1, read_dir(expected_download_folder).unwrap().count());
+        let expected_download = output_path.clone_push("PerfectMatchDependency/downloads/result/tar_bz2_file.txt");
+        assert_eq!("tar bz2 file".to_string(), read_to_string(expected_download).unwrap());
+        let expected_path_value = output_path.clone_push("PerfectMatchDependency/downloads/perfect_match_path");
+        assert_environment_contains("PATH", &expected_path_value);
+
+        let expected_perfect_match_path_value =
+            output_path.clone_push("PerfectMatchDependency/downloads/perfect_match");
+        assert_environment_contains("PERFECT_MATCH", &expected_perfect_match_path_value);
+        assert_eq!(Err(VarError::NotPresent), env::var("SHOULD_NOT_BE_SET"));
+        assert_eq!(
+            vec![
+                format!(
+                    "cd {:?} && echo 'perfect path set!!!'",
+                    output_path.clone_push("PerfectMatchDependency/downloads")
+                ),
+                "command to run".to_string()
+            ],
+            mock_command_executor.get_commands()
+        );
+        assert_eq!(ExitStatus::default(), exit_status);
+    }
+
+    fn assert_environment_contains(environment_name: &str, path_value: &PathBuf) {
+        let environment_variable = env::var(environment_name).unwrap();
+        assert!(
+            environment_variable.contains(path_value.to_str().unwrap()),
+            "{}, does not contain {:?}",
+            environment_variable,
+            path_value
+        );
+    }
+
+    fn start_file_server(fake_solipath: &PathBuf, fake_external_server: &PathBuf) -> JoinHandle<()> {
+        let route = warp::path("solipath")
+            .and(warp::fs::dir(fake_solipath.clone()))
+            .or(warp::path("external").and(warp::fs::dir(fake_external_server.clone())));
+
+        tokio::spawn(async { warp::serve(route).run(([127, 0, 0, 1], 53123)).await })
     }
 }

@@ -1,0 +1,20 @@
+{
+    "templates": [
+        {
+            "name": "template1",
+            "variables": {
+                "fileName": "tar_bz2_file",
+                "fileType": ".tar.bz2"
+            },
+            "platform_filters": [{"os": "Matching OS", "arch": "Matching Arch"}]
+        },
+        {
+            "name": "template1",
+            "variables": {
+                "fileName": "non-existent-file",
+                "fileType": ".zip"
+            },
+            "platform_filters": [{"os": "a bad match", "arch": "Matching Arch"}]
+        }
+    ]
+}

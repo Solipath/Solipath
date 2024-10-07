@@ -4,4 +4,3 @@ pub mod file_downloader;
 pub mod file_to_string_downloader;
 pub mod file_name_retriever;
 pub mod dependency_downloader;
-pub mod looping_dependency_downloader;

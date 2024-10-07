@@ -1,5 +1,4 @@
 pub mod solipath_shell;
-pub mod solipath_dependency_metadata;
 pub mod solipath_directory;
 pub mod solipath_download;
 pub mod solipath_environment_variable;
@@ -8,3 +7,5 @@ pub mod solipath_instructions;
 pub mod solipath_platform;
 pub mod solipath_template;
 pub mod solipath_cli;
+pub mod path_buf_ext;
+pub mod async_loop;

@@ -1,8 +1,6 @@
-use std::future::Future;
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use futures::future::join_all;
 #[cfg(test)]
 use mockall::automock;
 
@@ -11,26 +9,18 @@ use crate::solipath_platform::platform::Platform;
 
 #[cfg_attr(test, automock)]
 #[async_trait]
-pub trait PlatformFilterTrait:Sync+Send{
+pub trait PlatformFilterTrait: Sync + Send {
     fn current_platform_is_match(&self, platform_filter: &[Platform]) -> bool;
-    // TODO: once the "looping" files get refactored away, will try to move this method here
-    // async fn run_async_functions_matching_platform<'a, INPUT, FUTURE, RETURN, FUNCTION>(
-    //     &self,
-    //     inputs: &'a [INPUT],
-    //     function: FUNCTION,
-    // ) -> Vec<RETURN>
-    // where
-    //     INPUT: HasPlatformFilter+Send+Sync,
-    //     RETURN: Send+Sync,
-    //     FUTURE: Future<Output = RETURN>+Send+Sync,
-    //     FUNCTION: Fn(&'a INPUT) -> FUTURE+Send+Sync
-    // {
-    //     let async_function_list = inputs
-    //         .iter()
-    //         .filter(|input| self.current_platform_is_match(input.get_platform_filters()))
-    //         .map(|input| function(input));
-    //     join_all(async_function_list).await
-    // }
+}
+
+pub fn filter_list<T>(platform_filter: &Arc<dyn PlatformFilterTrait>, list: &Vec<T>) -> Vec<T>
+where
+    T: HasPlatformFilter + Clone,
+{
+    list.into_iter()
+        .filter(|item| platform_filter.current_platform_is_match(item.get_platform_filters()))
+        .map(|item| item.clone())
+        .collect()
 }
 
 pub struct PlatformFilter {
@@ -62,41 +52,10 @@ pub trait HasPlatformFilter {
     fn get_platform_filters(&self) -> &[Platform];
 }
 
-pub async fn run_async_functions_matching_platform<'a, INPUT, FUTURE, RETURN, FUNCTION>(
-    platform_filter: &Arc<dyn PlatformFilterTrait + Send + Sync>,
-    inputs: &'a [INPUT],
-    function: FUNCTION,
-) -> Vec<RETURN>
-where
-    INPUT: HasPlatformFilter,
-    FUTURE: Future<Output = RETURN>,
-    FUNCTION: Fn(&'a INPUT) -> FUTURE,
-{
-    let async_function_list = inputs
-        .iter()
-        .filter(|input| platform_filter.current_platform_is_match(input.get_platform_filters()))
-        .map(|input| function(input));
-    join_all(async_function_list).await
-}
-
-pub fn run_functions_matching_platform<'a, INPUT, RETURN, FUNCTION>(
-    platform_filter: &Arc<dyn PlatformFilterTrait + Send + Sync>,
-    inputs: &'a [INPUT],
-    function: FUNCTION,
-) -> Vec<RETURN>
-where
-    INPUT: HasPlatformFilter,
-    FUNCTION: Fn(&'a INPUT) -> RETURN,
-{
-    inputs
-        .iter()
-        .filter(|input| platform_filter.current_platform_is_match(input.get_platform_filters()))
-        .map(|input| function(input))
-        .collect()
-}
-
 #[cfg(test)]
 mod test {
+    use mock::FakeCurrentPlatformRetriever;
+
     use super::*;
     use crate::solipath_platform::current_platform_retriever::MockCurrentPlatformRetrieverTrait;
 
@@ -132,12 +91,84 @@ mod test {
         let platform_list = vec![Platform::new("windows", "x86_64"), Platform::new("linux", "x86_64")];
         assert_eq!(platform_filter.current_platform_is_match(&platform_list), true);
     }
+
+    #[derive(Debug, PartialEq, Eq, Clone)]
+    struct TestPlatformList {
+        name: String,
+        platform_filter: Vec<Platform>,
+    }
+
+    impl HasPlatformFilter for TestPlatformList {
+        fn get_platform_filters(&self) -> &[Platform] {
+            &self.platform_filter
+        }
+    }
+
+    #[test]
+    fn can_filter_has_platform_filter_list() {
+        let platform_retriever = FakeCurrentPlatformRetriever {
+            platform: Platform::new("Matching OS", "Matching Arch"),
+        };
+        let platform_filter: Arc<dyn PlatformFilterTrait> = Arc::new(PlatformFilter::new(Arc::new(platform_retriever)));
+        let input = vec![
+            TestPlatformList {
+                name: "included nothing filtered".to_string(),
+                platform_filter: Vec::new(),
+            },
+            TestPlatformList {
+                name: "included no arch".to_string(),
+                platform_filter: vec![Platform {
+                    os: "Matching OS".to_string(),
+                    arch: None,
+                }],
+            },
+            TestPlatformList {
+                name: "included exact match".to_string(),
+                platform_filter: vec![Platform::new("Matching OS", "Matching Arch")],
+            },
+            TestPlatformList {
+                name: "included one match".to_string(),
+                platform_filter: vec![
+                    Platform::new("Non Matching OS", "Non Match Arch"),
+                    Platform::new("Matching OS", "Matching Arch"),
+                ],
+            },
+            TestPlatformList {
+                name: "not included".to_string(),
+                platform_filter: vec![Platform::new("Non Matching OS", "Non Match Arch")],
+            },
+        ];
+
+        assert_eq!(
+            vec![
+                "included nothing filtered".to_string(),
+                "included no arch".to_string(),
+                "included exact match".to_string(),
+                "included one match".to_string()
+            ],
+            filter_list(&platform_filter, &input)
+                .iter()
+                .map(|output| output.name.to_string())
+                .collect::<Vec<String>>()
+        );
+    }
 }
 
 #[cfg(test)]
 pub mod mock {
+    use crate::solipath_platform::current_platform_retriever::CurrentPlatformRetrieverTrait;
     use crate::solipath_platform::platform::Platform;
     use crate::solipath_platform::platform_filter::MockPlatformFilterTrait;
+
+    pub struct FakeCurrentPlatformRetriever {
+        pub platform: Platform,
+    }
+
+    impl CurrentPlatformRetrieverTrait for FakeCurrentPlatformRetriever {
+        fn get_current_platform(&self) -> Platform {
+            self.platform.clone()
+        }
+    }
 
     pub fn verify_platform_filter(
         platform_filter: &mut MockPlatformFilterTrait,

@@ -1,5 +1,6 @@
 use std::path::PathBuf;
-use solipath_lib::solipath_directory::solipath_directory_finder::SolipathDirectoryFinderTrait;
+
+use super::solipath_directory_finder::SolipathDirectoryFinderTrait;
 
 pub struct MoveableHomeDirectoryFinder {
     base_dir: PathBuf,

@@ -66,3 +66,6 @@ Generally download links locations and environment variables rarely ever change 
 
 ### Install Commands
 Some programming languages/tooling can't be installed by decompressing a file and setting an environment variable for all operatings systems I want to support. For these there might be some commands that need to be run in order to finish an install. This will be another feature that will eventually get to `install_instructions.json`.
+
+
+Have a simple filter Vec<HasPlatformFilter> method. Call for individual dependencies to start, and create a method on install instructions that accepts a platform filter that can filter itself

@@ -1,4 +1,4 @@
-use crate::solipath_dependency_metadata::dependency::Dependency;
+use crate::solipath_instructions::data::dependency::Dependency;
 use crate::solipath_directory::solipath_directory_finder::SolipathDirectoryFinderTrait;
 use crate::solipath_instructions::data::environment_variable::EnvironmentVariable;
 use std::env::join_paths;

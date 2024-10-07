@@ -1,0 +1,41 @@
+{
+	"downloads": [
+		{
+			"url": "http://127.0.0.1:53123/external/${fileName}${fileType}",
+			"destination_directory": "result",
+            "platform_filters": [{"os": "Matching OS", "arch": "Matching Arch"}]
+		},
+        {
+			"url": "http://127.0.0.1:53123/external/tar_gz_file.tgz",
+			"destination_directory": "should_not_download",
+            "platform_filters": [{"os": "a bad match", "arch": "Matching Arch"}]
+		}
+	],
+	"environment_variables": [
+        {
+            "name": "PATH", 
+            "relative_path": "perfect_match_path", 
+            "platform_filters": [{"os": "Matching OS", "arch": "Matching Arch"}]
+        },
+        {
+            "name": "PERFECT_MATCH", 
+            "relative_path": "perfect_match", 
+            "platform_filters": [{"os": "Matching OS", "arch": "Matching Arch"}]
+        },
+		{
+            "name": "SHOULD_NOT_BE_SET", 
+            "relative_path": "path_not_to_be_set", 
+            "platform_filters": [{"os": "a bad match", "arch": "Matching Arch"}]
+        }
+	],
+	"install_commands": [
+		{
+			"command": "echo 'perfect path set!!!'", 
+            "platform_filters": [{"os": "Matching OS", "arch": "Matching Arch"}]
+		},
+        {
+			"command": "echo 'should not have run!!!'", 
+            "platform_filters": [{"os": "a bad match", "arch": "Matching Arch"}]
+		}
+	]
+}

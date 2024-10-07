@@ -4,10 +4,11 @@ use std::sync::Arc;
 #[cfg(test)]
 use mockall::automock;
 
-use crate::solipath_dependency_metadata::dependency::Dependency;
 use crate::solipath_directory::solipath_directory_finder::SolipathDirectoryFinderTrait;
 use crate::solipath_download::conditional_file_downloader::ConditionalFileDownloaderTrait;
 use crate::solipath_instructions::data::download_instruction::DownloadInstruction;
+use crate::solipath_instructions::data::dependency::Dependency;
+
 
 #[cfg_attr(test, automock)]
 #[async_trait]

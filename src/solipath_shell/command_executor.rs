@@ -62,6 +62,48 @@ impl CommandExecutorTrait for CommandExecutor {
 }
 
 #[cfg(test)]
+pub mod pub_test{
+    use std::process::ExitStatus;
+
+    use crossbeam::channel::{unbounded, Receiver, Sender};
+
+    use super::CommandExecutorTrait;
+
+    
+    pub struct MockCommandExecutor{
+        commands_sender: Sender<String>,
+        commands_receiver: Receiver<String>
+    }
+
+    impl MockCommandExecutor {
+        pub fn new()-> Self {
+            let (commands_sender, commands_receiver): (Sender<String>, Receiver<String>) = unbounded();
+            MockCommandExecutor{commands_sender, commands_receiver}
+        }
+        pub fn get_commands(&self)-> Vec<String> {
+            let length = self.commands_receiver.len();
+            let mut commands = Vec::new();
+            for _ in 0..length {
+                commands.push(self.commands_receiver.recv().unwrap());
+            }
+            commands
+        }
+    }
+
+    impl CommandExecutorTrait for MockCommandExecutor {
+        fn execute_command(&self,commands: &[String]) -> ExitStatus {
+            self.commands_sender.send(commands.join(" ")).unwrap();
+            ExitStatus::default()
+        }
+    
+        fn execute_single_string_command(&self,command:String) -> ExitStatus {
+            self.commands_sender.send(command).unwrap();
+            ExitStatus::default()
+        }
+    }
+}
+
+#[cfg(test)]
 mod test {
     use super::*;
 

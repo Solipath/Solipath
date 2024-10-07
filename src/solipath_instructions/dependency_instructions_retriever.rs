@@ -1,18 +1,15 @@
 use async_trait::async_trait;
 use std::path::PathBuf;
 use std::sync::Arc;
-
+use crate::solipath_instructions::data::dependency::Dependency;
 use crate::solipath_instructions::data::dependency_instructions::DependencyInstructions;
 use crate::{
-    solipath_dependency_metadata::dependency::Dependency,
     solipath_directory::solipath_directory_finder::SolipathDirectoryFinderTrait,
     solipath_download::file_to_string_downloader::FileToStringDownloaderTrait,
 };
 
 #[cfg(test)]
 use mockall::{automock, predicate::*};
-
-const BASE_DEPENDENCY_URL: &str = "https://raw.githubusercontent.com/Solipath/Solipath-Install-Instructions/main";
 
 #[cfg_attr(test, automock)]
 #[async_trait]
@@ -21,6 +18,7 @@ pub trait DependencyInstructionsRetrieverTrait {
 }
 
 pub struct DependencyInstructionsRetriever {
+    base_dependency_url: String,
     file_downloader: Arc<dyn FileToStringDownloaderTrait + Sync + Send>,
     directory_finder: Arc<dyn SolipathDirectoryFinderTrait + Sync + Send>,
 }
@@ -31,10 +29,25 @@ impl DependencyInstructionsRetriever {
         directory_finder: Arc<dyn SolipathDirectoryFinderTrait + Sync + Send>,
     ) -> Self {
         Self {
+            base_dependency_url: "https://raw.githubusercontent.com/Solipath/Solipath-Install-Instructions/main".to_string(),
             file_downloader,
             directory_finder,
         }
     }
+
+    pub fn new_with_alternate_url(
+        base_dependency_url: String,
+        file_downloader: Arc<dyn FileToStringDownloaderTrait + Sync + Send>,
+        directory_finder: Arc<dyn SolipathDirectoryFinderTrait + Sync + Send>,
+    ) -> Self {
+        Self {
+            base_dependency_url,
+            file_downloader,
+            directory_finder,
+        }
+    }
+
+
     fn get_path_to_save_file(&self, dependency: &Dependency) -> PathBuf {
         let mut path_to_save_file = self.directory_finder.get_dependency_version_directory(&dependency);
         path_to_save_file.push("install_instructions.json");
@@ -44,7 +57,7 @@ impl DependencyInstructionsRetriever {
     fn get_url(&self, dependency: &Dependency) -> String {
         format!(
             "{}/{}/{}/install_instructions.json",
-            BASE_DEPENDENCY_URL, dependency.name, dependency.version
+            &self.base_dependency_url, dependency.name, dependency.version
         )
     }
 }

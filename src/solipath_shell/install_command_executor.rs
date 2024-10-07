@@ -1,11 +1,11 @@
 #[cfg(test)]
 use mockall::automock;
-
 use std::fs::create_dir_all;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use crate::{solipath_shell::command_executor::CommandExecutorTrait, solipath_dependency_metadata::dependency::Dependency, solipath_directory::solipath_directory_finder::SolipathDirectoryFinderTrait, solipath_instructions::data::install_command::InstallCommand};
+use crate::solipath_instructions::data::dependency::Dependency;
+use crate::{solipath_shell::command_executor::CommandExecutorTrait, solipath_directory::solipath_directory_finder::SolipathDirectoryFinderTrait, solipath_instructions::data::install_command::InstallCommand};
 use crate::solipath_shell::install_command_filter::InstallCommandFilterTrait;
 
 #[cfg_attr(test, automock)]
@@ -43,9 +43,9 @@ impl InstallCommandExecutorTrait for InstallCommandExecutor {
 
 fn switch_to_download_directory_command(downloads_directory: &PathBuf)-> String {
     if std::env::consts::OS == "windows" {
-        format!("cd /d {}", downloads_directory.to_str().unwrap())
+        format!("cd /d \"{}\"", downloads_directory.display())
     } else {
-        format!("cd {}", downloads_directory.to_str().unwrap())
+        format!("cd \"{}\"", downloads_directory.display())
     }
 }
 
@@ -80,10 +80,10 @@ mod tests {
         
         let command_expectation = command_executor.expect_execute_single_string_command();
         if std::env::consts::OS == "windows" {
-            command_expectation.with(eq("cd /d downloads_directory && do something".to_string()))
+            command_expectation.with(eq("cd /d \"downloads_directory\" && do something".to_string()))
             .return_const(ExitStatus::default());
         } else {
-            command_expectation.with(eq("cd downloads_directory && do something".to_string()))
+            command_expectation.with(eq("cd \"downloads_directory\" && do something".to_string()))
             .return_const(ExitStatus::default());
         }
         let install_command_executor = InstallCommandExecutor::new(
