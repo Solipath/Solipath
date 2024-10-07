@@ -141,9 +141,7 @@ impl CommandWithPathExecutor {
 #[cfg(test)]
 mod test {
     use std::{
-        env::{self, VarError},
-        fs::{read_dir, read_to_string},
-        path::PathBuf, process::ExitStatus,
+        env::{self, VarError}, fs::{read_dir, read_to_string}, path::PathBuf, process::ExitStatus
     };
 
     use tempfile::tempdir;
@@ -235,8 +233,12 @@ mod test {
 
     fn assert_environment_contains(environment_name: &str, path_value: &PathBuf) {
         let environment_variable = env::var(environment_name).unwrap();
+        let mut expected_path_string = path_value.to_str().unwrap().to_string();
+        if std::env::consts::OS == "windows" {
+            expected_path_string = expected_path_string.replace("/", "\\");
+        }
         assert!(
-            environment_variable.contains(path_value.to_str().unwrap()),
+            environment_variable.contains(&expected_path_string),
             "{}, does not contain {:?}",
             environment_variable,
             path_value
