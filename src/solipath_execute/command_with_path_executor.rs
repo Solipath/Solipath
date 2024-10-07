@@ -169,7 +169,7 @@ mod test {
         env::{self, VarError},
         fs::{read_dir, read_to_string},
         path::PathBuf,
-        process::ExitStatus,
+        process::ExitStatus, thread::sleep, time::Duration,
     };
 
     use tempfile::tempdir;
@@ -254,12 +254,12 @@ mod test {
     }
 
     fn prefix_change_directory_command(directory: &PathBuf, command: &str) -> String {
-        let change_directory_flag = if std::env::consts::OS == "windows" { "/d" } else { "" };
+        let change_directory_flag = if std::env::consts::OS == "windows" { "/d " } else { "" };
         let mut expected_path_string = directory.display().to_string();
         if std::env::consts::OS == "windows" {
             expected_path_string = expected_path_string.replace("/", "\\");
         }
-        format!("cd {} \"{}\" && {}", change_directory_flag, expected_path_string, command)
+        format!("cd {}\"{}\" && {}", change_directory_flag, expected_path_string, command)
     }
 
     fn assert_environment_contains(environment_name: &str, path_value: &PathBuf) {
@@ -281,6 +281,8 @@ mod test {
             .and(warp::fs::dir(fake_solipath.clone()))
             .or(warp::path("external").and(warp::fs::dir(fake_external_server.clone())));
 
-        tokio::spawn(async { warp::serve(route).run(([127, 0, 0, 1], 53123)).await })
+        let join_handle = tokio::spawn(async { warp::serve(route).run(([127, 0, 0, 1], 53123)).await });
+        sleep(Duration::from_millis(200));
+        join_handle
     }
 }
