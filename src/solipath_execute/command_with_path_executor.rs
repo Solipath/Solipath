@@ -255,7 +255,11 @@ mod test {
 
     fn prefix_change_directory_command(directory: &PathBuf, command: &str) -> String {
         let change_directory_flag = if std::env::consts::OS == "windows" { "/d" } else { "" };
-        format!("cd {}{:?} && {}", change_directory_flag, directory, command)
+        let mut expected_path_string = directory.display().to_string();
+        if std::env::consts::OS == "windows" {
+            expected_path_string = expected_path_string.replace("/", "\\");
+        }
+        format!("cd {} \"{}\" && {}", change_directory_flag, expected_path_string, command)
     }
 
     fn assert_environment_contains(environment_name: &str, path_value: &PathBuf) {
