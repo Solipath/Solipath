@@ -2,10 +2,33 @@ use std::{process::ExitStatus, sync::Arc};
 
 use crate::solipath_instructions::data::dependency::Dependency;
 use crate::{
-    async_loop::run_async, solipath_directory::solipath_directory_finder::{SolipathDirectoryFinder, SolipathDirectoryFinderTrait}, solipath_download::{conditional_file_downloader::ConditionalFileDownloader, dependency_downloader::{DependencyDownloader, DependencyDownloaderTrait}, file_decompressor::FileDecompressor, file_downloader::FileDownloader, file_to_string_downloader::FileToStringDownloader}, solipath_environment_variable::environment_setter::{EnvironmentSetter, EnvironmentSetterTrait}, solipath_instructions::{
+    async_loop::run_async,
+    solipath_directory::solipath_directory_finder::{SolipathDirectoryFinder, SolipathDirectoryFinderTrait},
+    solipath_download::{
+        conditional_file_downloader::ConditionalFileDownloader,
+        dependency_downloader::{DependencyDownloader, DependencyDownloaderTrait},
+        file_decompressor::FileDecompressor,
+        file_downloader::FileDownloader,
+        file_to_string_downloader::FileToStringDownloader,
+    },
+    solipath_environment_variable::environment_setter::{EnvironmentSetter, EnvironmentSetterTrait},
+    solipath_instructions::{
         data::dependency_instructions::{DependencyInstructions, VecDependencyInstructions},
         dependency_instructions_retriever::{DependencyInstructionsRetriever, DependencyInstructionsRetrieverTrait},
-    }, solipath_platform::{current_platform_retriever::{CurrentPlatformRetriever, CurrentPlatformRetrieverTrait}, platform_filter::{filter_list, PlatformFilter, PlatformFilterTrait}}, solipath_shell::{command_executor::{CommandExecutor, CommandExecutorTrait}, install_command_executor::{InstallCommandExecutor, InstallCommandExecutorTrait}, install_command_filter::InstallCommandFilter}, solipath_template::{template_retriever::{TemplateRetriever, TemplateRetrieverTrait}, template_variable_replacer::TemplateVariableReplacer}
+    },
+    solipath_platform::{
+        current_platform_retriever::{CurrentPlatformRetriever, CurrentPlatformRetrieverTrait},
+        platform_filter::{filter_list, PlatformFilter, PlatformFilterTrait},
+    },
+    solipath_shell::{
+        command_executor::{CommandExecutor, CommandExecutorTrait},
+        install_command_executor::{InstallCommandExecutor, InstallCommandExecutorTrait},
+        install_command_filter::InstallCommandFilter,
+    },
+    solipath_template::{
+        template_retriever::{TemplateRetriever, TemplateRetrieverTrait},
+        template_variable_replacer::TemplateVariableReplacer,
+    },
 };
 
 pub struct CommandWithPathExecutor {
@@ -19,22 +42,23 @@ pub struct CommandWithPathExecutor {
 }
 
 impl CommandWithPathExecutor {
-
-    pub fn new()-> Self {
-        let base_solipath_url = "https://raw.githubusercontent.com/Solipath/Solipath-Install-Instructions/main".to_string();
+    pub fn new() -> Self {
+        let base_solipath_url =
+            "https://raw.githubusercontent.com/Solipath/Solipath-Install-Instructions/main".to_string();
         let directory_finder = Arc::new(SolipathDirectoryFinder::new());
         let platform_retriever = Arc::new(CurrentPlatformRetriever::new());
         let command_executor = Arc::new(CommandExecutor::new());
         Self::new_with_injected_values(
-            base_solipath_url, 
-            directory_finder, 
-            platform_retriever, 
-            command_executor)
+            base_solipath_url,
+            directory_finder,
+            platform_retriever,
+            command_executor,
+        )
     }
 
     pub async fn set_path_from_solipath_file_and_execute_command(&self, commands: &[String]) -> ExitStatus {
         let file_contents =
-        std::fs::read_to_string("solipath.json").expect("could not find a solipath.json file in current directory");
+            std::fs::read_to_string("solipath.json").expect("could not find a solipath.json file in current directory");
         let dependency_list: Vec<Dependency> =
             serde_json::from_str(&file_contents).expect("failed to parse dependency file");
         self.set_path_and_execute_command(dependency_list, commands).await
@@ -45,11 +69,10 @@ impl CommandWithPathExecutor {
         directory_finder: Arc<dyn SolipathDirectoryFinderTrait + Send + Sync>,
         platform_retriever: Arc<dyn CurrentPlatformRetrieverTrait + Send + Sync>,
         command_executor: Arc<dyn CommandExecutorTrait + Send + Sync>,
-    )-> Self{
+    ) -> Self {
         let file_downloader = Arc::new(FileDownloader::new());
         let file_decompressor = Arc::new(FileDecompressor::new());
-        let conditional_file_downloader =
-            Arc::new(ConditionalFileDownloader::new(file_downloader, file_decompressor));
+        let conditional_file_downloader = Arc::new(ConditionalFileDownloader::new(file_downloader, file_decompressor));
         let file_to_string_downloader = Arc::new(FileToStringDownloader::new(conditional_file_downloader.clone()));
         let dependency_instructions_retriever = Arc::new(DependencyInstructionsRetriever::new_with_alternate_url(
             base_solipath_url.clone(),
@@ -107,7 +130,11 @@ impl CommandWithPathExecutor {
         dependency_instructions
     }
 
-    pub async fn set_path_and_execute_command(&self, dependency_list: Vec<Dependency>, commands: &[String]) -> ExitStatus {
+    pub async fn set_path_and_execute_command(
+        &self,
+        dependency_list: Vec<Dependency>,
+        commands: &[String],
+    ) -> ExitStatus {
         let dependency_instructions = self.get_dependency_instructions(&dependency_list).await;
 
         run_async(
@@ -136,12 +163,13 @@ impl CommandWithPathExecutor {
     }
 }
 
-
-
 #[cfg(test)]
 mod test {
     use std::{
-        env::{self, VarError}, fs::{read_dir, read_to_string}, path::PathBuf, process::ExitStatus
+        env::{self, VarError},
+        fs::{read_dir, read_to_string},
+        path::PathBuf,
+        process::ExitStatus,
     };
 
     use tempfile::tempdir;
@@ -151,11 +179,8 @@ mod test {
     use crate::{
         path_buf_ext::PathBufExt,
         solipath_directory::moveable_home_directory_finder::MoveableHomeDirectoryFinder,
-        solipath_platform::{
-            platform::Platform,
-            platform_filter::mock::FakeCurrentPlatformRetriever,
-        },
-        solipath_shell::command_executor::pub_test::MockCommandExecutor
+        solipath_platform::{platform::Platform, platform_filter::mock::FakeCurrentPlatformRetriever},
+        solipath_shell::command_executor::pub_test::MockCommandExecutor,
     };
 
     use super::*;
@@ -174,9 +199,8 @@ mod test {
                 base_solipath_url,
                 directory_finder,
                 platform_retriever,
-                command_executor
+                command_executor,
             )
-
         }
     }
 
@@ -199,13 +223,11 @@ mod test {
             {"name": "BadArchDependency", "version": "3.0.1", "platform_filters": [{"os": "Matching OS", "arch": "Bad Arch"}]}
         ]"#).unwrap();
 
-
         let file_server = start_file_server(&solipath_source, &downloads_directory);
         let exit_status = command_with_path_executor
             .set_path_and_execute_command(dependencies, &["command to run".to_string()])
             .await;
         file_server.abort();
-
 
         let expected_download_folder = output_path.clone_push("PerfectMatchDependency/downloads/result");
         assert_eq!(1, read_dir(expected_download_folder).unwrap().count());
@@ -220,15 +242,20 @@ mod test {
         assert_eq!(Err(VarError::NotPresent), env::var("SHOULD_NOT_BE_SET"));
         assert_eq!(
             vec![
-                format!(
-                    "cd {:?} && echo 'perfect path set!!!'",
-                    output_path.clone_push("PerfectMatchDependency/downloads")
+                prefix_change_directory_command(
+                    &output_path.clone_push("PerfectMatchDependency/downloads"),
+                    "echo 'perfect path set!!!'"
                 ),
                 "command to run".to_string()
             ],
             mock_command_executor.get_commands()
         );
         assert_eq!(ExitStatus::default(), exit_status);
+    }
+
+    fn prefix_change_directory_command(directory: &PathBuf, command: &str) -> String {
+        let change_directory_flag = if std::env::consts::OS == "windows" { "/d" } else { "" };
+        format!("cd {}{:?} && {}", change_directory_flag, directory, command)
     }
 
     fn assert_environment_contains(environment_name: &str, path_value: &PathBuf) {
