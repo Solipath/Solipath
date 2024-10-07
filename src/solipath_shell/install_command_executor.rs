@@ -80,7 +80,7 @@ mod tests {
         
         let command_expectation = command_executor.expect_execute_single_string_command();
         if std::env::consts::OS == "windows" {
-            command_expectation.with(eq("cd /d \"downloads_directory\" && do something".to_string()))
+            command_expectation.with(eq("cd /d downloads_directory && do something".to_string()))
             .return_const(ExitStatus::default());
         } else {
             command_expectation.with(eq("cd \"downloads_directory\" && do something".to_string()))
