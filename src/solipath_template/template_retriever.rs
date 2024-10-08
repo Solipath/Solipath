@@ -91,7 +91,8 @@ impl TemplateRetrieverTrait for TemplateRetriever {
             .replace_variables(&template_content, &template);
         DependencyInstructions::new(
             dependency.clone(),
-            serde_json::from_str::<InstallInstructions>(&replaced_template_content).expect("failed to parse template"),
+            serde_json::from_str::<InstallInstructions>(&replaced_template_content)
+                .expect(&format!("failed to parse template {}", &replaced_template_content)),
         )
     }
 }
