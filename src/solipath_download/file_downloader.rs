@@ -39,7 +39,8 @@ impl FileDownloader {
         let mut number_of_tries = 0;
         let max_number_of_tries = 3;
         let mut result = self.make_request(url).await;
-        while result.is_err() && number_of_tries < max_number_of_tries{
+        while (result.is_err() && number_of_tries < max_number_of_tries) ||
+                (result.is_ok() && result.as_ref().unwrap().error_for_status_ref().is_err() && number_of_tries < max_number_of_tries) {
             println!("Error downloading {}, trying again...", url);
             result = self.make_request(url).await;
             number_of_tries += 1;
@@ -167,7 +168,7 @@ DEALINGS IN THE SOFTWARE.
                 "https://raw.githubusercontent.com/rust-lang/rust/master/LICENSE-MIT",
                 &temp_dir,
             )
-            .await.expect("something went wrong when downloadingi file");
+            .await.expect("something went wrong when downloading file");
 
         let file_contents = read_to_string(actual_path.to_str().unwrap())
             .await
