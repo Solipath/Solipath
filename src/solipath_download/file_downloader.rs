@@ -3,6 +3,7 @@ use async_trait::async_trait;
 use reqwest::Client;
 use reqwest::Error;
 use reqwest::Response;
+use reqwest::StatusCode;
 use tokio::time::sleep;
 use std::path::Path;
 use std::path::PathBuf;
@@ -39,8 +40,7 @@ impl FileDownloader {
         let mut number_of_tries = 0;
         let max_number_of_tries = 3;
         let mut result = self.make_request(url).await;
-        while (result.is_err() && number_of_tries < max_number_of_tries) ||
-                (result.is_ok() && result.as_ref().unwrap().error_for_status_ref().is_err() && number_of_tries < max_number_of_tries) {
+        while result.is_err() && number_of_tries < max_number_of_tries{
             println!("Error downloading {}, trying again...", url);
             result = self.make_request(url).await;
             number_of_tries += 1;
