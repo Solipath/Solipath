@@ -44,6 +44,7 @@ lzma-rs = "0.3.0"
 bzip2-rs = {git = "https://github.com/paolobarbolini/bzip2-rs.git"}
 dmg = "0.1.2"
 anyhow = "1.0.86"
+#surf = {version="2.3.2", features=["hyper-client","middleware-logger","encoding"]}
 
 
 [dev-dependencies]

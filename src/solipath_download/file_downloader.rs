@@ -40,9 +40,10 @@ impl FileDownloader {
         let max_number_of_tries = 3;
         let mut result = self.make_request(url).await;
         while result.is_err() && number_of_tries < max_number_of_tries{
+            println!("Error downloading {}, trying again...", url);
             result = self.make_request(url).await;
             number_of_tries += 1;
-            sleep(Duration::new(1u64, 0)).await
+            sleep(Duration::new(2*number_of_tries, 0)).await
         }
         Ok(result.context(format!("failed to download file: {}", url))?)
     }

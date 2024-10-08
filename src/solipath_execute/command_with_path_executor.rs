@@ -169,7 +169,7 @@ mod test {
         env::{self, VarError},
         fs::{read_dir, read_to_string},
         path::PathBuf,
-        process::ExitStatus, thread::sleep, time::Duration,
+        process::ExitStatus,
     };
 
     use tempfile::tempdir;
@@ -283,7 +283,6 @@ mod test {
             .or(warp::path("external").and(warp::fs::dir(fake_external_server.clone())));
 
         let join_handle = tokio::spawn(async { warp::serve(route).run(([127, 0, 0, 1], 53123)).await });
-        sleep(Duration::from_millis(1000));
         join_handle
     }
 }
