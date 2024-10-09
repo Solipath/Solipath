@@ -73,7 +73,7 @@ impl DependencyInstructionsRetrieverTrait for DependencyInstructionsRetriever {
             .await;
         DependencyInstructions::new(
             dependency.clone(),
-            serde_json::from_str(&dependency_json_string).expect("failed to serialize install instructions"),
+            serde_json::from_str(&dependency_json_string).expect(&format!("failed to serialize install instructions {}", &dependency_json_string)),
         )
     }
 }

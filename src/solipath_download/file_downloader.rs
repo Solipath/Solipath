@@ -3,7 +3,6 @@ use async_trait::async_trait;
 use reqwest::Client;
 use reqwest::Error;
 use reqwest::Response;
-use reqwest::StatusCode;
 use tokio::time::sleep;
 use std::path::Path;
 use std::path::PathBuf;
@@ -36,6 +35,7 @@ impl FileDownloader {
         }
     }
 
+
     async fn repeat_request(&self, url: &str) -> Result<Response> {
         let mut number_of_tries = 0;
         let max_number_of_tries = 3;
@@ -56,12 +56,14 @@ impl FileDownloader {
                     .await.and_then(|response| response.error_for_status())
     }
 
-    async fn stream_response_output_to_file(&self, response: &mut Response, file: &mut File) {
-        while let Some(chunk) = response.chunk().await.expect("file download failed!") {
+    async fn stream_response_output_to_file(&self, response: &mut Response, file: &mut File) -> Result<()> {
+        while let Some(chunk) = response.chunk().await.context("file download failed!")? {
             file.write_all(&chunk)
                 .await
-                .expect("failed to write to file as part of download");
+                .context("failed to write to file as part of download")?;
         }
+        file.sync_all().await.context("failed to sync downloaded file")?;
+        Result::Ok(())
     }
 }
 
@@ -80,7 +82,7 @@ impl FileDownloaderTrait for FileDownloader {
         let mut file = File::create(path_to_save_to.clone())
             .await
             .context(format!("could not create file: {}", file_name))?;
-        self.stream_response_output_to_file(&mut response, &mut file).await;
+        self.stream_response_output_to_file(&mut response, &mut file).await?;
         println!("finished downloading {}", url);
         Ok(path_to_save_to)
     }
@@ -93,7 +95,7 @@ impl FileDownloaderTrait for FileDownloader {
             .await
             .expect("failed to create parent directories");
         let mut file = File::create(path_to_save_to).await.expect("could not create file");
-        self.stream_response_output_to_file(&mut response, &mut file).await;
+        self.stream_response_output_to_file(&mut response, &mut file).await.unwrap();
         println!("finished downloading {}", url);
     }
 }
