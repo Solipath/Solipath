@@ -1,55 +1,43 @@
 use reqwest::header::HeaderMap;
-use reqwest::header::HeaderValue;
 use reqwest::header::CONTENT_DISPOSITION;
-use hyperx::header::ContentDisposition;
-use hyperx::header::DispositionParam;
-use hyperx::header::Header;
-use hyperx::header::Raw;
-
 
 pub fn get_file_name(url: &str, header: &HeaderMap) -> String {
-    match header.get(CONTENT_DISPOSITION) {
-        Some(content_disposition) => get_file_name_from_content_disposition(content_disposition, url),
-        None => get_string_after_last_forward_slash(url),
-    }
-}
-
-fn get_file_name_from_content_disposition(header: &HeaderValue, url: &str) -> String {
-    let content_string = header.to_str().expect("failed to convert to string");
-    let content_disposition = ContentDisposition::parse_header::<Raw>(&content_string.into()).unwrap();
-    let filename_param: Option<&DispositionParam> = content_disposition
-        .parameters
-        .iter()
-        .filter(|param| is_filename(param))
-        .next();
-    if let Some(DispositionParam::Filename(_, _, file_bytes)) = filename_param {
-        std::str::from_utf8(file_bytes).unwrap().to_string()
+    if let Some(file_name) = get_file_name_from_content_disposition(header) {
+        file_name
     } else {
         get_string_after_last_forward_slash(url)
     }
 }
 
-fn is_filename(param: &DispositionParam) -> bool {
-    match param {
-        DispositionParam::Filename(_, _, _) => true,
-        _ => false,
+fn get_file_name_from_content_disposition(header: &HeaderMap) -> Option<String> {
+    if header.contains_key(CONTENT_DISPOSITION) {
+        let content_disposition= header
+        .get(CONTENT_DISPOSITION)
+        .expect("header should have had a content disposition")
+        .to_str()
+        .expect("content disposition should be able to be converted to a string");
+        mailparse::parse_content_disposition(content_disposition).params.get("filename").and_then(|file_name|{
+            Some(file_name.to_owned())
+        })
+    } else {
+        None
     }
 }
+
 
 fn get_string_after_last_forward_slash(url: &str) -> String {
     let index_of_forward_slash: usize = url.rfind('/').expect("could not find a forward slash in url");
     let (_, string_after_last_slash) = url.split_at(index_of_forward_slash + 1);
-    if let Some(index_of_question_mark) = string_after_last_slash.rfind('?'){
+    if let Some(index_of_question_mark) = string_after_last_slash.rfind('?') {
         let (file_name, _) = string_after_last_slash.split_at(index_of_question_mark);
         file_name.to_string()
     } else {
         string_after_last_slash.to_string()
     }
-
 }
 
 #[cfg(test)]
-mod tests{
+mod tests {
     use super::*;
 
     #[test]
