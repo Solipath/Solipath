@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use dirs_next::home_dir;
+use directories::UserDirs;
 
 use crate::solipath_instructions::data::dependency::Dependency;
 
@@ -33,6 +33,10 @@ pub trait SolipathDirectoryFinderTrait {
     }
 }
 
+pub fn home_dir()-> PathBuf{
+    UserDirs::new().unwrap().home_dir().to_path_buf()
+}
+
 pub struct SolipathDirectoryFinder {}
 
 impl SolipathDirectoryFinder {
@@ -43,7 +47,7 @@ impl SolipathDirectoryFinder {
 
 impl SolipathDirectoryFinderTrait for SolipathDirectoryFinder {
     fn get_base_solipath_directory(&self) -> PathBuf {
-        let mut solipath = home_dir().expect("failed to retrieve home dir");
+        let mut solipath = home_dir();
         solipath.push("solipath");
         solipath
     }
@@ -57,7 +61,7 @@ mod tests {
     #[test]
     fn base_solipath_directory_ends_with_solipath() {
         let solipath_directory = SolipathDirectoryFinder::new().get_base_solipath_directory();
-        let home_dir = home_dir().unwrap().to_str().unwrap().to_string();
+        let home_dir = home_dir().to_str().unwrap().to_string();
         assert_eq!(solipath_directory, PathBuf::from(format!("{}/solipath", home_dir)));
     }
 
@@ -65,7 +69,7 @@ mod tests {
     fn dependency_solipath_directory_ends_with_solipath_dependency_name_version() {
         let dependency = Dependency::new("java", "11");
         let solipath_directory = SolipathDirectoryFinder::new().get_dependency_version_directory(&dependency);
-        let home_dir = home_dir().unwrap().to_str().unwrap().to_string();
+        let home_dir = home_dir().to_str().unwrap().to_string();
         assert_eq!(
             solipath_directory,
             PathBuf::from(format!("{}/solipath/java/11", home_dir))
@@ -76,7 +80,7 @@ mod tests {
     fn dependency_downloads_solipath_directory_ends_with_solipath_dependency_name() {
         let dependency = Dependency::new("node", "14");
         let solipath_directory = SolipathDirectoryFinder::new().get_dependency_downloads_directory(&dependency);
-        let home_dir = home_dir().unwrap().to_str().unwrap().to_string();
+        let home_dir = home_dir().to_str().unwrap().to_string();
         assert_eq!(
             solipath_directory,
             PathBuf::from(format!("{}/solipath/node/downloads", home_dir))
@@ -87,7 +91,7 @@ mod tests {
     fn dependency_template_solipath_directory_ends_with_solipath_dependency_name() {
         let dependency = Dependency::new("node", "14");
         let solipath_directory = SolipathDirectoryFinder::new().get_dependency_template_directory(&dependency);
-        let home_dir = home_dir().unwrap().to_str().unwrap().to_string();
+        let home_dir = home_dir().to_str().unwrap().to_string();
         assert_eq!(
             solipath_directory,
             PathBuf::from(format!("{}/solipath/node/templates", home_dir))
