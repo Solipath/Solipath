@@ -33,7 +33,7 @@ pub trait SolipathDirectoryFinderTrait {
     }
 }
 
-pub fn home_dir()-> PathBuf{
+fn home_dir()-> PathBuf{
     UserDirs::new().unwrap().home_dir().to_path_buf()
 }
 
