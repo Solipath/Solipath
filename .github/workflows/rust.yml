@@ -38,13 +38,12 @@ jobs:
             target: x86_64-pc-windows-msvc
             runTests: true
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Install rust version
       uses: dtolnay/rust-toolchain@stable
       with:
         toolchain: stable
         target: ${{matrix.target}}
-    - uses: actions/checkout@v3
     - name: Switch x86 mac target
       if: ${{'x86_64-apple-darwin' == matrix.target}}
       run: $env /usr/bin/arch -x86_64 /bin/zsh ---login
