@@ -17,21 +17,26 @@ jobs:
     strategy: 
       matrix:
         include:
-          - os: macos-12
+          - os: macos-latest
             name: macos_x86_64
             target: x86_64-apple-darwin
-          - os: macos-12
+            runTests: true
+          - os: macos-latest
             name: macos_aarch64
             target: aarch64-apple-darwin
+            runTests: true
           - os: ubuntu-latest
             name: linux_x86_64
             target: x86_64-unknown-linux-gnu
+            runTests: true
           - os: ubuntu-latest
             name: linux_aarch64
             target: aarch64-unknown-linux-gnu
+            runTests: false
           - os: windows-latest
             name: windows_x86_64
             target: x86_64-pc-windows-msvc
+            runTests: true
     steps:
     - uses: actions/checkout@v3
     - name: Install rust version
@@ -40,12 +45,15 @@ jobs:
         toolchain: stable
         target: ${{matrix.target}}
     - uses: actions/checkout@v3
+    - name: Switch x86 mac target
+      if: ${{'x86_64-apple-darwin' == matrix.target}}
+      run: $env /usr/bin/arch -x86_64 /bin/zsh ---login
     - name: Install Dependencies
       if: ${{'aarch64-unknown-linux-gnu' == matrix.target}}
       run: sudo apt-get update && sudo apt-get install gcc-aarch64-linux-gnu
     - name: Run tests
-      if: startsWith(matrix.target, 'x86_64')
-      run: cargo test --verbose --release --features=expensive_tests
+      if: ${{matrix.runTests}}
+      run: cargo test --verbose --release --target=${{matrix.target}} --features=expensive_tests
     - name: Build Release
       run: cargo build --verbose --release --target=${{matrix.target}}
     - uses: "marvinpinto/action-automatic-releases@latest"
