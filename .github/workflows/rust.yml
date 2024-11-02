@@ -55,12 +55,13 @@ jobs:
       run: cargo test --verbose --release --target=${{matrix.target}} --features=expensive_tests
     - name: Build Release
       run: cargo build --verbose --release --target=${{matrix.target}}
-    - uses: "marvinpinto/action-automatic-releases@latest"
+    - name: Release
+      uses: "softprops/action-gh-release@v2"
       with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "latest-${{matrix.name}}"
+        tag_name: "latest-${{matrix.name}}"
         prerelease: false
-        title: "Latest Build ${{matrix.name}}"
+        fail_on_unmatched_files: false
+        name: "Latest Build ${{matrix.name}}"
         files: |
           target/${{matrix.target}}/release/solipath.exe
           target/${{matrix.target}}/release/download_verifier.exe
