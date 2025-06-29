@@ -106,7 +106,9 @@ mod tests {
     use tempfile::tempdir;
     use tokio::fs::read_to_string;
 
-    const DOWNLOAD_CONTENT: &str = r#"Permission is hereby granted, free of charge, to any
+    const DOWNLOAD_CONTENT: &str = r#"Copyright (c) The Rust Project Contributors
+
+Permission is hereby granted, free of charge, to any
 person obtaining a copy of this software and associated
 documentation files (the "Software"), to deal in the
 Software without restriction, including without

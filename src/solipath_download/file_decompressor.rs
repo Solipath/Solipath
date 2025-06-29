@@ -1,4 +1,5 @@
 use flate2::read::GzDecoder;
+use ruzstd::decoding::StreamingDecoder;
 use zip::ZipArchive;
 use std::fs::read_dir;
 use std::io::Read;
@@ -42,6 +43,8 @@ impl FileDecompressorTrait for FileDecompressor {
             extract_tar_xz_to_destination(source_file, target_directory);
         } else if file_name.ends_with(".tar.bz2") {
             extract_tar_bz2_to_destination(source_file, target_directory);
+        }  else if file_name.ends_with(".tar.zst") {
+            extract_tar_zstd_to_destination(source_file, target_directory);
         } else if file_name.ends_with(".7z") {
             extract_7z_to_destination(source_file, target_directory);
         } else if file_name.ends_with(".dmg"){
@@ -102,7 +105,18 @@ fn extract_tar_xz_to_destination(source_file: &Path, target_directory: &Path) {
     let tar_xz_file = File::open(source_file).expect("failed to open file");
     let mut tar_data = Vec::with_capacity(tar_xz_file.metadata().unwrap().len() as usize);
     let mut buffered_reader = BufReader::new(tar_xz_file);
-    lzma_rs::xz_decompress(&mut buffered_reader, &mut tar_data).expect("failed to decompresss xz file");
+    lzma_rs::xz_decompress(&mut buffered_reader, &mut tar_data).expect("failed to decompress xz file");
+    let mut tar_cursor = Cursor::new(tar_data);
+    let mut archive = Archive::new(&mut tar_cursor);
+    archive.unpack(&target_directory).expect("failed to extract tar file");
+}
+
+fn extract_tar_zstd_to_destination(source_file: &Path, target_directory: &Path) {
+    let tar_zstd_file = File::open(source_file).expect("failed to open file");
+    let mut tar_data = Vec::with_capacity(tar_zstd_file.metadata().unwrap().len() as usize);
+    let mut buffered_reader = BufReader::new(tar_zstd_file);
+    let mut zstd_decoder = StreamingDecoder::new(&mut buffered_reader).expect("failed to initialize zstd decoder");
+    zstd_decoder.read_to_end(&mut tar_data).expect("failed to decompress zstd file");
     let mut tar_cursor = Cursor::new(tar_data);
     let mut archive = Archive::new(&mut tar_cursor);
     archive.unpack(&target_directory).expect("failed to extract tar file");
@@ -317,5 +331,22 @@ mod test {
         let file_contents = fs::read_to_string(expected_destination_file.to_str().unwrap())
             .expect("something went wrong trying to read file");
         assert_eq!(file_contents, "this is a file inside a .tar.xz");
+    }
+
+    #[test]
+    fn decompress_tar_zstd_file_to_destination_directory_with_tar_zst_extension() {
+        let temp_dir = tempdir().unwrap();
+        let target_directory = temp_dir.path().to_path_buf();
+        let mut expected_destination_file = target_directory.clone();
+        expected_destination_file.push("file_in_tar_zst.txt");
+        let mut source_file = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        source_file.push("tests/resources/tar_zst_file.tar.zst");
+
+        let file_decompressor = FileDecompressor::new();
+        file_decompressor.decompress_file_to_directory(&source_file, &target_directory);
+
+        let file_contents = fs::read_to_string(expected_destination_file.to_str().unwrap())
+            .expect("something went wrong trying to read file");
+        assert_eq!(file_contents, "this is a file inside a .tar.zst");
     }
 }
