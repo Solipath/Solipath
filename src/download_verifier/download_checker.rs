@@ -20,12 +20,12 @@ impl DownloadChecker {
     }
     async fn repeat_request(&self, url: &str) -> Result<Response> {
         let mut number_of_tries = 0;
-        let max_number_of_tries = 3;
+        let max_number_of_tries = 4;
         let mut result = self.reqwest_client.head(url).send().await;
         while result.is_err() && number_of_tries < max_number_of_tries{
             result = self.reqwest_client.head(url).send().await;
             number_of_tries += 1;
-            sleep(Duration::new(1u64, 0)).await
+            sleep(Duration::new((1+number_of_tries)*5u64, 0)).await
         }
         Ok(result.context(format!("failed to download file: {}", url))?)
     }
